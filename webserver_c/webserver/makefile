@@ -7,7 +7,7 @@ CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS = 
 SRCS = $(SRC_DIR)/server.c $(SRC_DIR)/network.c $(SRC_DIR)/process.c
 OBJS = $(OBJ_DIR)/server.o $(OBJ_DIR)/network.o $(OBJ_DIR)/process.o
-PROG = network
+PROG = server
 RM = /bin/rm
 
 # all: greetings
