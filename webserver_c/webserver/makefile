@@ -5,8 +5,8 @@ SRC_DIR = src
 OBJ_DIR = objects
 CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS = 
-SRCS = $(SRC_DIR)/server.c $(SRC_DIR)/network.c $(SRC_DIR)/process.c
-OBJS = $(OBJ_DIR)/server.o $(OBJ_DIR)/network.o $(OBJ_DIR)/process.o
+SRCS = $(SRC_DIR)/server.c $(SRC_DIR)/network.c $(SRC_DIR)/process.c $(SRC_DIR)/tools.c
+OBJS = $(OBJ_DIR)/server.o $(OBJ_DIR)/network.o $(OBJ_DIR)/process.o $(OBJ_DIR)/tools.o
 PROG = server
 RM = /bin/rm
 

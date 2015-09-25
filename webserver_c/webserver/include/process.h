@@ -7,5 +7,5 @@
 
 #ifndef _PROCESS_H
 #define _PROCESS_H
-void handle_request(int);
+void handle_request(int, char *);
 #endif
