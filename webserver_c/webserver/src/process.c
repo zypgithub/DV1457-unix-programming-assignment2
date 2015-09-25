@@ -32,15 +32,16 @@ int get_method(char *buf, char *method, char *uri, char *version)
 
 }
 
-//get head content, if found a name matched in the content, return the index of required content
+//get head content, if found a name matched in the content, return the end index of the required line.
 int get_head_content(char *buf, char *name, char *res)
 {
     int loc = myKMP(buf, name);
+    int endind;
     if(loc >= 0)
     {
-        get_line(buf + loc + 2, res);
+        endind = get_line(buf + loc + 2, res);
         printf("User-Agent:%s\n",res);   
-        return loc;
+        return endind;
     }
     else
         return -1;
