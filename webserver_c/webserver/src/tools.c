@@ -50,11 +50,11 @@ int myKMP(char *motherstr, char *template)
     
 }
 
-//get substring from start to a \n or the end of string, return the starting index where the end of the line. 
-int get_line(char *str, char *res)
+//get substring from start to a \n or any character, return the starting index where the end of the line. 
+int get_substr(char *str, char *res, char endat)
 {
     int i = 0;
-    while(str[i] != 0 && str[i] != '\n')
+    while(str[i] != 0 && str[i] != endat)
     {
         res[i] = str[i];
         i ++;
