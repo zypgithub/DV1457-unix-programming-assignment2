@@ -1,0 +1,244 @@
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+Require method: GET
+Require url: ./
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+Require method: GET
+Require url: ./css/base.css
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Accept: text/css,*/*;q=0.1
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Referer: http://0.0.0.0:8000/
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+Require method: GET
+Require url: ./pic/minions_happy.jpg
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Accept: image/webp,image/*,*/*;q=0.8
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Referer: http://0.0.0.0:8000/
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+Require method: GET
+Require url: ./
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:41.0) Gecko/20100101 Firefox/41.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+Require method: GET
+Require url: ./css/base.css
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:41.0) Gecko/20100101 Firefox/41.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Referer: http://0.0.0.0:8000/
+Connection: keep-alive
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+Require method: GET
+Require url: ./pic/minions_happy.jpg
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:41.0) Gecko/20100101 Firefox/41.0
+Accept: image/png,image/*;q=0.8,*/*;q=0.5
+Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Referer: http://0.0.0.0:8000/
+Connection: keep-alive
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+Require method: GET
+Require url: ./
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+Require method: GET
+Require url: ./pic/minions_happy.jpg
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Accept: image/webp,image/*,*/*;q=0.8
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Referer: http://0.0.0.0:8000/
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:52:49
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:08
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+
+Got connection from 127.0.0.1
+Require time: 09-28-2105 16:53:10
+Require method: GET
+Require url: ./css/base.css
+Http version: HTTP/1.1
+require content:
+Host: 0.0.0.0:8000
+Connection: keep-alive
+Accept: text/css,*/*;q=0.1
+User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Referer: http://0.0.0.0:8000/
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+

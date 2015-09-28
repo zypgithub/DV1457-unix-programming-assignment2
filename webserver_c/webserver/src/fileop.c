@@ -15,14 +15,34 @@
 int send_file(int clientfd, FILE *f)
 {
     char buf[20001]; 
-    int time = 20000, size = 1;
+    int nmemb = 20000, size = 1;
     int len;
-    while(fread(buf, size, time, f) != 0)
+    while(fread(buf, size, nmemb, f) != 0)
     {
-        len = send_data(clientfd, buf, time * size);  
+        len = send_data(clientfd, buf, nmemb * size);  
 //        printf("%d bytes have been sent\n", len);
     }
 
+}
+
+int open_send_file(int clientfd, char *path)
+{
+    char buf[20001]; 
+    int nmemb = 20000, size = 1;
+    int len;
+    FILE *f;
+
+    f = fopen(path, "rb");
+    if (f == NULL)
+    {
+        printf("open_send_file: file not found\n");
+        return -1;
+    }
+    while(fread(buf, size, nmemb, f) != 0)
+    {
+        len = send_data(clientfd, buf, nmemb * size);  
+    }
+    return 0;
 }
 
 // test for chroot

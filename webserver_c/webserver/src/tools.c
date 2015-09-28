@@ -59,6 +59,6 @@ int get_substr(char *str, char *res, char endat)
         res[i] = str[i];
         i ++;
     }
-    res[i + 1] = 0;
+    res[i] = 0;
     return i;
 }

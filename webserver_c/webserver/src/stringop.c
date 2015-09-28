@@ -32,24 +32,45 @@ int get_file_type(char *path, char *type)
     return 1;
 }
 
+int split_filename_path(char *url, char *filename, char *path)
+{
+    int len = strlen(url);
+    int i = len - 1;
+    if (url[i] == '/')
+        return 1;
+    for (; i > 0; i--)
+    {
+        if (url[i] == '/') 
+        {
+            sprintf(filename, "%s", &url[i + 1]);
+            int j;
+            for (j = 0; j < i; j++)
+            {
+                path[j] = url[j];
+            }
+            path[j] = 0;
+        }
+    }
+}
+
 int parse_url(char *url, char *realurl, char *argu)
 {
     char *temp;
     char filetype[21] = "";
     int filetypeflag;
-    if((temp = strstr(url, "?")) != NULL)
+    if ((temp = strstr(url, "?")) != NULL)
     {
         strcpy(argu, temp + 1);
         *temp = 0;
     }
     realpath(url, realurl);
-    if(strcmp(url, "./") == 0)
+    if (strcmp(url, "./") == 0)
     {
-        strcat(realurl, "/index.html"); 
+        strcat(realurl, "/html/index.html"); 
         return 0;
     }
 
-    if((filetypeflag = get_file_type(realurl, filetype)) == 1)
+    if ((filetypeflag = get_file_type(realurl, filetype)) == 1)
     {
         int len = strlen(realurl);
         if(realurl[len - 1] == '/')
@@ -58,12 +79,16 @@ int parse_url(char *url, char *realurl, char *argu)
         }
         strcat(realurl, ".html");
     }
-    else if(filetypeflag < 0)
+    else if (filetypeflag < 0)
     {
         return filetypeflag;
     }
+    char path[1000], filename[1000];
+   // split_filename_path(realurl, path, filename);
+    
     return 0;
 }
+
 
 //find the content label such as: User-Agent: xxxx , if found a name matched in the content, return the end index of the required line.
 int find_label(char *buf, char *name, char *res)

@@ -1,0 +1,19 @@
+h1
+{
+    clear:left;
+    text-align:center;
+}
+p
+{
+    text-align:center;
+    color:#ff9955;
+}
+
+img
+{
+    height: 235px;
+    width: 200px;
+    float: left;
+
+    margin-left: 45%;
+}

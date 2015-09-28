@@ -28,7 +28,7 @@ void *get_in_addr(struct sockaddr *s)
 }
 
 // start server listener 
-int start_linsten(char* port, int backlog)
+int start_listen(char* port, int backlog)
 {
     struct sockaddr_in serveraddr;
     struct addrinfo hints, *servinfo, *p;
@@ -42,6 +42,10 @@ int start_linsten(char* port, int backlog)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
+    char hostname[100];
+    gethostname(hostname, 99);
+
+    //if((rv = getaddrinfo(hostname, port, &hints, &servinfo)) != 0)
     if((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv)); // gai_streeror() gets errors information by using return code from getaddrinfo()
@@ -51,18 +55,18 @@ int start_linsten(char* port, int backlog)
     {
         if((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
         {
-            perror("server: socket\n");
+            perror("server: socket");
             continue;
         }
         if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)) < 0)
         {
-            perror("server: setsockopt\n");
+            perror("server: setsockopt");
             return -1;
         }
         if(bind(sockfd, p->ai_addr, p->ai_addrlen) < 0)
         {
             close(sockfd);
-            perror("server: bind\n");
+            perror("server: bind");
             continue;
         }
         break;
@@ -70,7 +74,7 @@ int start_linsten(char* port, int backlog)
 
     if(p == NULL)
     {
-        fprintf(stderr, "server: failed to start server");
+        fprintf(stderr, "server: failed find a node can be used to create a socket and bind\n");
         return -1;
     }
 
@@ -82,16 +86,16 @@ int start_linsten(char* port, int backlog)
     //printf("Server has started\n");
     if( p->ai_family == AF_INET6 )
     {
-        printf("ipv6\n");
+        printf("IP version: ipv6\n");
     }
     if( p->ai_family == AF_INET)
     {
-        printf("ipv4\n");
+        printf("IP version: ipv4\n");
         // char ipaddr[100];
         // inet_atop(p->ai_family, get_in_addr((struct aockaddr *)p->ai_addr), ipaddr, sizeof(ipaddr));
         struct sockaddr_in *addr;
         addr = (struct sockaddr_in *)p->ai_addr; 
-        printf("local ip:%s\n", inet_ntoa((struct in_addr)addr->sin_addr));
+        printf("local ip: http://%s:%s\n", inet_ntoa((struct in_addr)addr->sin_addr), port);
     }
     freeaddrinfo(servinfo);
     return sockfd;
@@ -169,7 +173,8 @@ char *get_method(char *buf, char *method, char *url, char *version)
 
 // receive data
 // return code : -1 connection broken; -2 Request too large; -3 other error 
-int recv_data(int clientfd, char *buf)
+// clientfd: connect socket, buf: data received, maxlen: maxlen expected, if this value is -1, means no limited
+int recv_data(int clientfd, char *buf, int maxlen)
 {
     int rec_len;
     char recv_data[513];
@@ -180,21 +185,20 @@ int recv_data(int clientfd, char *buf)
     {
         sprintf(buf, "%s%s", buf, recv_data);
         total_data += rec_len;
-        if(total_data > 4000)
+        if(total_data > maxlen && maxlen != -1)
             return -2;
     }
     if(rec_len < 0)
     {
-        if(errno != EAGAIN)
+        if(errno != EAGAIN && errno != EWOULDBLOCK)
         {
-            printf("server: recv %d\n", rec_len);
+            printf("Client: recv %d\n", rec_len);
             return -3;
         }
     }
     else if(rec_len == 0)
     {
-        close(clientfd);
-        printf("server: connection break\n%s\n", strerror(errno));
+        printf("Client: connection break\n%s\n", strerror(errno));
         return -1;
     }
     return 0;

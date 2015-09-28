@@ -27,138 +27,70 @@ int prevent_zombie()
     return 0;
 }
 
-
-void handle_it(int clientfd)
+void handle_it_process(int clientfd, int listenfd)
 {
-     if (!fork())
+    if (!fork())
     {
         // child process.
-        char method[10], url[100], version[10];
-        char res[50];
-        char buf[10000] = "";
-        int recv_flag;
-        char argu[200];
-        char parsedurl[100];
-        FILE *f;
-
-        if((recv_flag = recv_data(clientfd, buf)) < 0)
-        {
-            printf("server error: recv_data: %d\n", recv_flag);
-            close(clientfd);
-            exit(-1);
-        }
-        char *requirebody = get_method(buf, method, url, version);
-        printf("Require method: %s\nRequire url: %s\nHttp version: %s\n", method, url, version);
-
-        char requirecontent[10000];
-        get_substr(requirebody, requirecontent, -1);
-        printf("require content:\n%s", requirecontent);
-        //find_label(buf, "User-Agent: ", res);
-
-        //printf("Im the child\n");
-        int validflag;
-        if ((validflag = parse_url(url, parsedurl, argu)) == 0 )
-        {
-
-            if (strcmp(method, "GET") == 0)
-            {
-                //require method is GET
-                if ((f = fopen(parsedurl, "rb")) == NULL)
-                {
-                    validflag = 404; 
-                    printf("Required file %s not exist\n", parsedurl);
-                }
-                else
-                {
-                    char contenttype[20];
-                    char type[20];
-                    struct stat filestat;
-                    int contenttypefg;
-                    get_file_type(parsedurl, type);
-                    if ((contenttypefg = get_content_type(type, contenttype)) == 0)
-                    {
-                        strcat(contenttype, "; charset=utf-8");
-                        stat(parsedurl, &filestat);
-                        send_header(clientfd, 200, contenttype, filestat.st_size);
-                        send_file(clientfd, f);
-                    }
-                    else
-                    {
-                        switch(contenttypefg)
-                        {
-                            case 1:
-                                validflag = 400;
-                                printf("server error: get_content_type, GET method, unknown content_type");
-                                break;
-                                
-                        }
-                    }
-                }
-            }
-            else if (strcmp(method, "HEAD") == 0)
-            {
-                //require method is HEAD
-                if ((f = fopen(parsedurl, "rb")) == NULL)
-                {
-                    validflag = 404; 
-                    printf("Required file %s not exist\n", parsedurl);
-                }
-                else
-                {
-                    char contenttype[20];
-                    char type[20];
-                    struct stat filestat;
-                    int contenttypefg;
-                    get_file_type(parsedurl, type);
-                    if ((contenttypefg = get_content_type(type, contenttype)) == 0)
-                    {
-                        strcat(contenttype, "; charset=utf-8");
-                        stat(parsedurl, &filestat);
-                        send_header(clientfd, 200, contenttype, filestat.st_size);
-                    }
-                    else
-                    {
-                        switch(contenttypefg)
-                        {
-                            case 1:
-                                validflag = 400;
-                                printf("server error: get_content_type, HEAD method, unknown content_type");
-                                break;
-                                
-                        }
-                    }
-                }
-            }
-            else
-            {
-                validflag = 501;
-            }
-        }
-        switch(validflag)
-        {
-            case 400:
-                send_header(clientfd, 400, "text/html", 13);
-                send_data(clientfd, "Bad Required!", 13);
-                break;
-            case 403:
-                send_header(clientfd, 403, "text/html", 10);
-                send_data(clientfd, "Forbidden!", 10);
-                break;
-            case 404:
-                send_header(clientfd, 404, "text/html", 10);
-                send_data(clientfd, "Not Found!", 10);
-                break;
-            case 500:
-                send_header(clientfd, 500, "text/html", 23);
-                send_data(clientfd, "Internal Server Error!", 23);
-                break;
-            case 501:
-                send_header(clientfd, 501, "text/html", 16);
-                send_data(clientfd, "Not Implemented!", 16);
-                break;
-        }
+        close(listenfd);
+        handle_it(clientfd);
         close(clientfd);
-        //printf("Im the child, I have finished\n");
         exit(0);
     }
 }
+
+int daemon_printpid(char *path)
+{
+    // first step: fork off a child process
+    pid_t sid, f = fork();
+    if(f > 0)
+    {
+        //father process
+        exit(0);
+    }
+    else if(f < 0)
+    {
+        // fail to fork
+        perror("daemon_printpid: f < 0\n");
+        exit(-1);
+    }
+    else
+    {
+        //child process;
+        //Second step: Set the File opearting privilege
+        //if umask set to 0, it means every body can read and write on output files. 
+        //so I set it as 022, it means only owner can read and write, others only can read
+        umask(022);
+
+        //Third step: Opening Logs 
+
+        //Forth step: Set SID
+        sid = setsid();
+        //fifth setp: Set working path
+        chdir(path);
+        // additional step: print pid
+        
+        pid_t pid = getpid();
+        printf("The daemon process ID: %d\n", pid);
+//      sixth step: close standard file descriptors
+//      close(STDIN_FILENO);
+//      close(STDOUT_FILENO);
+//      close(STDERR_FILENO);
+        freopen("./output", "awb+", stdout);
+        freopen("./erroutput", "awb+", stderr);
+        // final step: handle siginals
+        // SIGCHLD: when a process terminate, this signal will sent to the father process
+        // SIGTSTP: usually, this signal is get from ctrl + z from keyboard.
+        // SIGTTOU: when a background process trying to print to terminal 
+        // SIGTTIN: when a background process trying to read from terminal
+        // SIGHUP: when the rerminal is disconnected, this signal will be sent to the process which has the terminal controlling 
+        // SIG_IGN: ingore the catched signal
+        signal(SIGCHLD,SIG_IGN); 
+        signal(SIGTSTP,SIG_IGN);
+        signal(SIGTTOU,SIG_IGN);
+        signal(SIGTTIN,SIG_IGN);
+        signal(SIGHUP,SIG_IGN);
+
+    }
+}
+
