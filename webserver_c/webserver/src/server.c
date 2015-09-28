@@ -15,9 +15,9 @@
 #include<netdb.h>
 #include<signal.h>
 #include<errno.h>
-#include<time.h>
 #include<pwd.h>
 #include<sys/stat.h>
+#include<syslog.h>
 
 #include"network.h"
 #include"process.h"
@@ -167,8 +167,8 @@ void handle_it(int clientfd)
 int main(int argc, char * argv[])
 {
    
-    int sockfd, connfd, backlog = 30, daemonflag = 0;
-    struct sockaddr_storage clientsockaddr;
+    int sockfd, connfd, backlog = 30, daemonflag = 0, logflag = 1;
+    struct sockaddr clientsockaddr;
     char clientip[50];
     struct sigaction sig;
     char loginusername[20];
@@ -176,8 +176,6 @@ int main(int argc, char * argv[])
     char webpath[200] = "./", webrealpath[200];
     char port[10] = "8080";
     FILE *config;
-    time_t t;
-    struct tm *ti;
 
     //Read configuration file
     printf("Loading configuration file\n");
@@ -291,9 +289,7 @@ int main(int argc, char * argv[])
     prevent_zombie();
 
     printf("Server start success!\n");
-    t = time(NULL);
-    ti = localtime(&t);
-    printf("Start time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
+    
     // check request handle method
     if (daemonflag == 1)
     {
@@ -301,20 +297,31 @@ int main(int argc, char * argv[])
         daemon_printpid(webrealpath);
     }
     //daemon(1, 1);
+    if (logflag > 0)
+    {
+        openlog("webserver", LOG_CONS, LOG_USER);
+    }
    while(1)
     {
         int clientaddrlen = sizeof(clientsockaddr); 
-        connfd = accept(sockfd, (struct sockaddr *)&clientsockaddr, &clientaddrlen);
+        connfd = accept(sockfd, &clientsockaddr, &clientaddrlen);
         if(connfd == -1)
         {
             perror("server: accept\n");
             continue;
         }
-         t = time(NULL);
-        ti = localtime(&t);
-        inet_ntop(clientsockaddr.ss_family, get_in_addr((struct sockaddr *)&clientsockaddr), clientip, sizeof clientip);
-        printf("\nGot connection from %s\n", clientip);
-        printf("Require time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
+        //t = time(NULL);
+        //ti = localtime(&t);
+        //inet_ntop(clientsockaddr.ss_family, get_in_addr((struct sockaddr *)&clientsockaddr), clientip, sizeof clientip);
+        //printf("\nGot connection from %s\n", clientip);
+        //printf("Require time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
+        char formattedtime[50];
+        log_get_current_time(formattedtime);
+        printf("%s\n", formattedtime);
+        return 0;
+        /*
+        get_client_ip(connfd);
+        */
         signal(SIGPIPE, SIG_IGN);
         handle_it_process(connfd, sockfd);
         close(connfd);

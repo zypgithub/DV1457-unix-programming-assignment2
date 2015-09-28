@@ -230,4 +230,21 @@ int get_content_type(char *type, char *contenttype)
         return 1;
 }
 
+int get_client_ip(int clientfd, char *addr)
+{
+    struct sockaddr_storage clientsockaddr;
+    int socketlen = sizeof(clientsockaddr);
+    if ( getpeername(clientfd, (struct sockaddr *)&clientsockaddr, &socketlen) == -1)
+    {
+        perror("getpeername");
+    }
+    char ip[50];
+    if ( inet_ntop(clientsockaddr.ss_family, get_in_addr((struct sockaddr *)&clientsockaddr), ip, sizeof ip) == NULL)
+    { 
+        perror("get_client_ip");
+        return -1;
+    }
+    strcpy(addr, ip);
+    return 0;
+}
 

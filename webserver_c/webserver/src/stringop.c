@@ -90,6 +90,19 @@ int parse_url(char *url, char *realurl, char *argu)
 }
 
 
+//get substring from start to a \n or any character, return the starting index where the end of the line. 
+int get_substr(char *str, char *res, char endat)
+{
+    int i = 0;
+    while(str[i] != 0 && str[i] != endat)
+    {
+        res[i] = str[i];
+        i ++;
+    }
+    res[i] = 0;
+    return i;
+}
+
 //find the content label such as: User-Agent: xxxx , if found a name matched in the content, return the end index of the required line.
 int find_label(char *buf, char *name, char *res)
 {
@@ -107,3 +120,4 @@ int find_label(char *buf, char *name, char *res)
     else
         return 1;
 }
+

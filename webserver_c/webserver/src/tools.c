@@ -8,6 +8,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<time.h>
 
 //make the next array for KMP
 int KMP_get_next(char *template, int *next, int len)
@@ -50,15 +51,16 @@ int myKMP(char *motherstr, char *template)
     
 }
 
-//get substring from start to a \n or any character, return the starting index where the end of the line. 
-int get_substr(char *str, char *res, char endat)
+void get_current_time(struct tm **ti)
 {
-    int i = 0;
-    while(str[i] != 0 && str[i] != endat)
-    {
-        res[i] = str[i];
-        i ++;
-    }
-    res[i] = 0;
-    return i;
+    time_t t;
+    t = time(NULL);
+    *ti = localtime(&t);
+}
+
+void log_get_current_time(char *formattedtime)
+{
+    struct tm *ti;
+    get_current_time(&ti);
+    strftime(formattedtime, 50, "%e/%b/%Y %H:%M:%S %z\n", ti);
 }
