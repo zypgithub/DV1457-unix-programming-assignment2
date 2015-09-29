@@ -6,15 +6,21 @@
  ************************************************************************/
 
 #include<stdio.h>
+#include<stdlib.h>
+#include<syslog.h>
 #include<unistd.h>
 
 int main()
 {
-    int d = daemon(0, 0);
-    printf("%d\n", d);
-    while(1)
-    {
-        sleep(100000);
-    }
+
+//    openlog("daemon", 0, LOG_USER);
+//    syslog(LOG_ERR, "HELLO, I accessed here by syslog after chroot function\n");
+    FILE *f = fopen("../test.txt", "w+");
+    fprintf(f, "Hello, Im here\n");
+    chroot("./");
+    char rpath[100];
+    realpath("./", rpath);
+    printf("%s\n", rpath);
+    fprintf(f, "hello, Im still here\n");
     return 0;
 }

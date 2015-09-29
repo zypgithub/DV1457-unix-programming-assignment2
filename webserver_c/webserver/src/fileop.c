@@ -10,26 +10,50 @@
 #include<string.h>
 #include<unistd.h>
 #include<errno.h>
+#include<sys/stat.h>
 #include<pwd.h>
+#include<time.h>
+
+int logflag;
+char logpath[200];
+
+int get_file_size(char *path)
+{
+    struct stat filestat;
+    if (stat(path, &filestat) == -1)
+    {
+        perror("get_file_size");
+        return -1;
+    }
+    return filestat.st_size;
+}
+
+time_t get_file_last_modify(char *path)
+{
+    struct stat filestat;
+    if (stat(path, &filestat) == -1)
+    {
+        perror("get_file_last_modify");
+        return -1;
+    }
+    return filestat.st_mtime;
+}
 
 int send_file(int clientfd, FILE *f)
 {
-    char buf[20001]; 
-    int nmemb = 20000, size = 1;
+    char buf[100001]; 
     int len;
-    while(fread(buf, size, nmemb, f) != 0)
+    int total_len = 0;
+    while((len = fread(buf, sizeof(char), 100000, f)) != 0)
     {
-        len = send_data(clientfd, buf, nmemb * size);  
-//        printf("%d bytes have been sent\n", len);
+        len = send_data(clientfd, buf, len);  
+        total_len += len;
     }
-
+    return total_len;
 }
 
 int open_send_file(int clientfd, char *path)
 {
-    char buf[20001]; 
-    int nmemb = 20000, size = 1;
-    int len;
     FILE *f;
 
     f = fopen(path, "rb");
@@ -38,11 +62,30 @@ int open_send_file(int clientfd, char *path)
         printf("open_send_file: file not found\n");
         return -1;
     }
-    while(fread(buf, size, nmemb, f) != 0)
+    return send_file(clientfd, f);
+}
+
+void set_logflag(int flag)
+{
+    logflag = flag;
+}
+
+int set_logpath(char *path)
+{
+    if(realpath(path, logpath) == NULL)   
     {
-        len = send_data(clientfd, buf, nmemb * size);  
+        printf("set_logpath error: path invalid\n");
+        return -1;
     }
     return 0;
+}
+int write_log(char *content)
+{
+   switch(logflag)
+    {
+        case 0:
+        break;
+    }
 }
 
 // test for chroot

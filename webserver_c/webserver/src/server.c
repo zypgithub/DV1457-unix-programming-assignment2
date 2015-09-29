@@ -16,7 +16,6 @@
 #include<signal.h>
 #include<errno.h>
 #include<pwd.h>
-#include<sys/stat.h>
 #include<syslog.h>
 
 #include"network.h"
@@ -28,7 +27,7 @@ void handle_it(int clientfd)
     char method[10], url[1000], version[10];
     char res[50];
     char buf[10000] = "";
-    int recv_flag;
+    int recv_flag, data_sent = 0;
     char argu[200];
     char parsedurl[1000];
     FILE *f;
@@ -57,7 +56,6 @@ void handle_it(int clientfd)
     printf("require content:\n%s", requirecontent);
 
     int validflag;
-    struct stat filestat;
     if ((validflag = parse_url(url, parsedurl, argu)) == 0 )
     {
 
@@ -71,16 +69,26 @@ void handle_it(int clientfd)
             }
             else
             {
-                char contenttype[20];
+                char content[2000];
+                char contenttype[50];
+                char filelastmodify[50];
                 char type[20];
+                struct tm *ti;
                 int contenttypefg;
+                time_t t;
                 get_file_type(parsedurl, type);
                 if ((contenttypefg = get_content_type(type, contenttype)) == 0)
                 {
                     strcat(contenttype, "; charset=utf-8");
-                    stat(parsedurl, &filestat);
-                    send_header(clientfd, 200, contenttype, filestat.st_size);
-                    send_file(clientfd, f);
+                    // add more content here
+                    t = get_file_last_modify(parsedurl);
+                    ti = localtime(&t);
+                    strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+                    printf("%s\n", filelastmodify);
+                    sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
+                    printf("content: %s", content);
+                    send_header(clientfd, 200, content, get_file_size(parsedurl));
+                    data_sent = send_file(clientfd, f);
                 }
                 else
                 {
@@ -90,9 +98,9 @@ void handle_it(int clientfd)
                             validflag = 400;
                             printf("server error: get_content_type, GET method, unknown content_type");
                             break;
-
                     }
                 }
+                fclose(f);
             }
         }
         else if (strcmp(method, "HEAD") == 0)
@@ -107,14 +115,12 @@ void handle_it(int clientfd)
             {
                 char contenttype[20];
                 char type[20];
-                struct stat filestat;
                 int contenttypefg;
                 get_file_type(parsedurl, type);
                 if ((contenttypefg = get_content_type(type, contenttype)) == 0)
                 {
                     strcat(contenttype, "; charset=utf-8");
-                    stat(parsedurl, &filestat);
-                    send_header(clientfd, 200, contenttype, filestat.st_size);
+                    send_header(clientfd, 200, contenttype, get_file_size(parsedurl));
                 }
                 else
                 {
@@ -124,10 +130,10 @@ void handle_it(int clientfd)
                         validflag = 400;
                         printf("server error: get_content_type, HEAD method, unknown content_type");
                         break;
-
                     }
                 }
             }
+            fclose(f);
         }
         else
             validflag = 501;
@@ -135,32 +141,28 @@ void handle_it(int clientfd)
     switch(validflag)
     {
         case 400:
-            stat("./html/400.html", &filestat);
-            send_header(clientfd, 400, "text/html", filestat.st_size);
+            send_header(clientfd, 400, "text/html", get_file_size("./html/400.html"));
             open_send_file(clientfd, "./html/400.html");
             break;
         case 403:
 
-            stat("./html/403.html", &filestat);
-            send_header(clientfd, 403, "text/html", filestat.st_size);
+            send_header(clientfd, 403, "text/html", get_file_size("./html/403.html"));
             open_send_file(clientfd, "./html/403.html");
             break;
         case 404:
-            stat("./html/404.html", &filestat);
-            send_header(clientfd, 404, "text/html", filestat.st_size);
+            send_header(clientfd, 404, "text/html", get_file_size("./html/404.html"));
             open_send_file(clientfd, "./html/404.html");
             break;
         case 500:
-            stat("./html/500.html", &filestat);
-            send_header(clientfd, 500, "text/html", filestat.st_size);
+            send_header(clientfd, 500, "text/html", get_file_size("./html/500.html"));
             open_send_file(clientfd, "./html/500.html");
             break;
         case 501:
-            stat("./html/501.html", &filestat);
-            send_header(clientfd, 501, "text/html", filestat.st_size);
+            send_header(clientfd, 501, "text/html", get_file_size("./html/501.html"));
             open_send_file(clientfd, "./html/501.html");
             break;
     }
+
     return;
 }
 
@@ -190,7 +192,7 @@ int main(int argc, char * argv[])
         int readlen = fread(conf_buf, sizeof(char), 2048, config);
         conf_buf[readlen] = 0;
         int loc;
-        char res[10];
+        char res[200];
         loc = find_label(conf_buf, "PORT=", res);
         if (loc == -1)
         {
@@ -252,7 +254,9 @@ int main(int argc, char * argv[])
     }
     if (realpath(webpath, webrealpath) == NULL)
     {
-        printf("server error: %s\n", strerror(errno));
+        printf("realpath error: %s\n", strerror(errno));
+        printf("server root path is invalid\n");
+        return -1;
     }
     else
     {
@@ -297,9 +301,15 @@ int main(int argc, char * argv[])
         daemon_printpid(webrealpath);
     }
     //daemon(1, 1);
-    if (logflag > 0)
+    //
+    //check logflag 0 means use system log, 1 means use the specified file
+    if (logflag == 0)
     {
         openlog("webserver", LOG_CONS, LOG_USER);
+    }
+    else
+    {
+        
     }
    while(1)
     {
@@ -318,7 +328,6 @@ int main(int argc, char * argv[])
         char formattedtime[50];
         log_get_current_time(formattedtime);
         printf("%s\n", formattedtime);
-        return 0;
         /*
         get_client_ip(connfd);
         */

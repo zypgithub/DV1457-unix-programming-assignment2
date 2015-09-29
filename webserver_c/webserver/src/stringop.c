@@ -100,6 +100,7 @@ int get_substr(char *str, char *res, char endat)
         i ++;
     }
     res[i] = 0;
+    //printf("%s\n", res)
     return i;
 }
 

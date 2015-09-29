@@ -119,7 +119,7 @@ int send_data(int clientfd, char *buf, int len)
                 close(clientfd);
                 return sentlen_total;
             }
-            printf("server error: send %s", buf);
+//            printf("server error: send %s", buf);
             return sentlen_onetime;
         }
         sentlen_total += sentlen_onetime;
@@ -128,7 +128,7 @@ int send_data(int clientfd, char *buf, int len)
     return sentlen_total;
 }
 // send response header to client
-int send_header(int clientfd, int status_code, char *contenttype, int contentlen)
+int send_header(int clientfd, int status_code, char *content)
 {
     char head[300];
     switch(status_code)
@@ -153,11 +153,8 @@ int send_header(int clientfd, int status_code, char *contenttype, int contentlen
             break;
     }
     int len = strlen(head);
-    sprintf(head, "%sContent-type: %s\r\n", head, contenttype);
-    sprintf(head, "%sContent-length: %d\r\n", head, contentlen);
-    //add more response head contents here
-
-    sprintf(head, "%s\r\n", head);
+    printf("head: %s\n", head);
+    sprintf(head, "%s%s\r\n", head, content);
     send_data(clientfd, head , strlen(head));
 }
 // get require method, url and http version, return a pointer that point at the begining of next line
