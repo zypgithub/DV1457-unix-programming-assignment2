@@ -58,9 +58,16 @@ void get_current_time(struct tm **ti)
     *ti = localtime(&t);
 }
 
-void log_get_current_time(char *formattedtime)
+void stdlog_get_current_time(char *formattedtime)
 {
     struct tm *ti;
     get_current_time(&ti);
-    strftime(formattedtime, 50, "%e/%b/%Y %H:%M:%S %z\n", ti);
+    strftime(formattedtime, 50, "[%e/%b/%Y:%H:%M:%S %z]", ti);
+}
+
+void errlog_get_current_time(char *formattedtime)
+{
+    struct tm *ti;
+    get_current_time(&ti);
+    strftime(formattedtime, 50, "[%a %b %e %H:%M:%S %Y]", ti);
 }

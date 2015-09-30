@@ -14,8 +14,27 @@
 #include<pwd.h>
 #include<time.h>
 
-int logflag;
-char logpath[200];
+FILE *logfile, *errlogfile;
+
+int record_std(char *record)
+{
+    if(logfile == NULL)
+    {
+        printf("Standard log file is not open yet\n");
+        return -1;
+    }
+    fprintf(logfile, "%s\n", record);
+}
+
+int record_err(char *record)
+{
+    if(errlogfile == NULL)
+    {
+        printf("Error log file is not open yet\n");
+        return -1;
+    }
+    fprintf(errlogfile, "%s\n", record);
+}
 
 int get_file_size(char *path)
 {
@@ -62,60 +81,47 @@ int open_send_file(int clientfd, char *path)
         printf("open_send_file: file not found\n");
         return -1;
     }
-    return send_file(clientfd, f);
+    int temp = send_file(clientfd, f);
+    fclose(f);
+    return temp;
 }
 
-void set_logflag(int flag)
-{
-    logflag = flag;
-}
 
-int set_logpath(char *path)
+int open_err_log_file(char *path)
 {
-    if(realpath(path, logpath) == NULL)   
+    if (errlogfile != NULL)
     {
-        printf("set_logpath error: path invalid\n");
-        return -1;
-    }
-    return 0;
-}
-int write_log(char *content)
-{
-   switch(logflag)
-    {
-        case 0:
-        break;
-    }
-}
-
-// test for chroot
-/*
-int main()
-{
-    char **p;
-    char url[100] = "./";
-    char newurl[100];
-    char name[100];
-    struct passwd *ps;
-    getlogin_r(name, 100);
-    realpath(url, newurl);
-    ps = getpwnam(name);
-    if(ps != NULL)
-    {
-        printf("gid: %d\nuid: %d\n", ps->pw_gid, ps->pw_uid);
+        printf("Error log file has been openned already\n");
+        return 1;
     }
     else
     {
-        printf("%s\n", strerror(errno));
+        errlogfile = fopen(path, "aw+");
+        if (errlogfile == NULL)
+        {
+            printf("Cannot open error logfile\n");
+            return -1;
+        }
     }
-    url_is_valid("../../", newurl, p);
-    setuid(ps->pw_uid);
-    setgid(ps->pw_gid);
-    if(chroot(newurl) == -1)
-    {
-        printf("%s\n", strerror(errno));
-    }
-   //free(ps);
     return 0;
 }
-*/
+
+
+int open_std_log_file(char *path)
+{
+    if (logfile != NULL)
+    {
+        printf("Standard log file has been openned already\n");
+        return 1;
+    }
+    else
+    {
+        logfile = fopen(path, "aw+");
+        if (logfile == NULL)
+        {
+            printf("Cannot open standard logfile\n");
+            return -1;
+        }
+    }
+    return 0;
+}

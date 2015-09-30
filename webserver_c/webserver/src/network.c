@@ -153,7 +153,6 @@ int send_header(int clientfd, int status_code, char *content)
             break;
     }
     int len = strlen(head);
-    printf("head: %s\n", head);
     sprintf(head, "%s%s\r\n", head, content);
     send_data(clientfd, head , strlen(head));
 }
@@ -161,8 +160,7 @@ int send_header(int clientfd, int status_code, char *content)
 char *get_method(char *buf, char *method, char *url, char *version)
 {
     char nextline[50];
-    url[0] = '.';
-    sscanf(buf, "%s %s %s %s", method, url + 1, version, nextline);
+    sscanf(buf, "%s %s %s %s", method, url, version, nextline);
    // printf("method: %s\nurl: %s\nversion: %s\n", method, url, version);
     return strstr(buf, nextline);
 

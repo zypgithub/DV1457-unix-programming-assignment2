@@ -21,18 +21,19 @@
 #include"network.h"
 #include"process.h"
 
+#define MAXHEADLENGTH 1000
 
 void handle_it(int clientfd)
 {
-    char method[10], url[1000], version[10];
-    char res[50];
-    char buf[10000] = "";
-    int recv_flag, data_sent = 0;
-    char argu[200];
-    char parsedurl[1000];
+    char method[10], url[4000], version[10];
+    char content[2000], filelastmodify[50], res[50], buf[10000] = "", argu[200], parsedurl[1000];
+    char logcontent[100], temp[1000];
+    int recv_flag, datasent = 0;
     FILE *f;
+    time_t t;
+    struct tm *ti;
 
-    if((recv_flag = recv_data(clientfd, buf, 4000)) < 0)
+    if((recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH)) < 0)
     {
         switch(recv_flag)
         {
@@ -48,136 +49,127 @@ void handle_it(int clientfd)
         }
         return;
     }
+    get_client_ip(clientfd, temp);
+    // Ignore the second and third colume. they can be added here if necessary
+    sprintf(logcontent, "%s - - ", temp);
+    log_get_current_time(temp);
+    strcat(logcontent, temp);
+
     char *requirebody = get_method(buf, method, url, version);
     printf("Require method: %s\nRequire url: %s\nHttp version: %s\n", method, url, version);
-
-    char requirecontent[10000];
-    get_substr(requirebody, requirecontent, -1);
-    printf("require content:\n%s", requirecontent);
-
-    int validflag;
-    if ((validflag = parse_url(url, parsedurl, argu)) == 0 )
+    sprintf(temp, " \"%s %s %s\"", method, url, version);
+    strcat(logcontent, temp);
+    int statuscode;
+    if ((statuscode = parse_url(url, parsedurl, argu)) == 0 )
     {
-
-        if (strcmp(method, "GET") == 0)
+        char contenttype[50];
+        char type[20];
+        int contenttypefg;
+        get_file_type(parsedurl, type);
+        if ((contenttypefg = get_content_type(type, contenttype)) == 0)
         {
-            //require method is GET
-            if ((f = fopen(parsedurl, "rb")) == NULL)
+            if (!strcmp(method, "GET") || !strcmp(method, "HEAD"))
             {
-                validflag = 404; 
-                printf("Required file %s not exist\n", parsedurl);
-            }
-            else
-            {
-                char content[2000];
-                char contenttype[50];
-                char filelastmodify[50];
-                char type[20];
-                struct tm *ti;
-                int contenttypefg;
-                time_t t;
-                get_file_type(parsedurl, type);
-                if ((contenttypefg = get_content_type(type, contenttype)) == 0)
+                f = fopen(parsedurl, "rb");
+                if (f == NULL)
+                {
+                    statuscode = 404; 
+                    printf("Required file %s not exist\n", parsedurl);
+                }
+                else
                 {
                     strcat(contenttype, "; charset=utf-8");
-                    // add more content here
                     t = get_file_last_modify(parsedurl);
                     ti = localtime(&t);
                     strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-                    printf("%s\n", filelastmodify);
                     sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
-                    printf("content: %s", content);
-                    send_header(clientfd, 200, content, get_file_size(parsedurl));
-                    data_sent = send_file(clientfd, f);
-                }
-                else
-                {
-                    switch(contenttypefg)
-                    {
-                        case 1:
-                            validflag = 400;
-                            printf("server error: get_content_type, GET method, unknown content_type");
-                            break;
+                    send_header(clientfd, 200, content);
+                    if (strcmp(method, "GET") == 0)
+                    {    
+                        datasent = send_file(clientfd, f);
                     }
+                    statuscode = 200;
+                    fclose(f);
                 }
-                fclose(f);
-            }
-        }
-        else if (strcmp(method, "HEAD") == 0)
-        {
-            //require method is HEAD
-            if ((f = fopen(parsedurl, "rb")) == NULL)
-            {
-                validflag = 404; 
-                printf("Required file %s not exist\n", parsedurl);
             }
             else
             {
-                char contenttype[20];
-                char type[20];
-                int contenttypefg;
-                get_file_type(parsedurl, type);
-                if ((contenttypefg = get_content_type(type, contenttype)) == 0)
-                {
-                    strcat(contenttype, "; charset=utf-8");
-                    send_header(clientfd, 200, contenttype, get_file_size(parsedurl));
-                }
-                else
-                {
-                    switch(contenttypefg)
-                    {
-                        case 1:
-                        validflag = 400;
-                        printf("server error: get_content_type, HEAD method, unknown content_type");
-                        break;
-                    }
-                }
+                statuscode = 501;
             }
-            fclose(f);
         }
         else
-            validflag = 501;
+        {
+            switch(contenttypefg)
+            {
+                case 1:
+                statuscode = 400;
+                printf("server error: get_content_type, HEAD method, unknown content_type");
+                break;
+            } 
+        }
     }
-    switch(validflag)
+    switch(statuscode)
     {
         case 400:
-            send_header(clientfd, 400, "text/html", get_file_size("./html/400.html"));
-            open_send_file(clientfd, "./html/400.html");
+            t = get_file_last_modify("./html/400.html");
+            ti = localtime(&t);
+            strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/400.html"), filelastmodify);
+            send_header(clientfd, 400, content);
+            datasent = open_send_file(clientfd, "./html/400.html");
             break;
         case 403:
-
-            send_header(clientfd, 403, "text/html", get_file_size("./html/403.html"));
-            open_send_file(clientfd, "./html/403.html");
+            t = get_file_last_modify("./html/403.html");
+            ti = localtime(&t);
+            strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/403.html"), filelastmodify);
+            send_header(clientfd, 403,content);
+            datasent = open_send_file(clientfd, "./html/403.html");
             break;
         case 404:
-            send_header(clientfd, 404, "text/html", get_file_size("./html/404.html"));
-            open_send_file(clientfd, "./html/404.html");
+            t = get_file_last_modify("./html/404.html");
+            ti = localtime(&t);
+            strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/404.html"), filelastmodify);
+            send_header(clientfd, 404, content);
+            datasent = open_send_file(clientfd, "./html/404.html");
             break;
         case 500:
-            send_header(clientfd, 500, "text/html", get_file_size("./html/500.html"));
-            open_send_file(clientfd, "./html/500.html");
+            t = get_file_last_modify("./html/500.html");
+            ti = localtime(&t);
+            strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/500.html"), filelastmodify);
+            send_header(clientfd, 500, content);
+            //open_send_file(clientfd, "./html/500.html");
             break;
         case 501:
-            send_header(clientfd, 501, "text/html", get_file_size("./html/501.html"));
-            open_send_file(clientfd, "./html/501.html");
+            t = get_file_last_modify("./html/501.html");
+            ti = localtime(&t);
+            strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/501.html"), filelastmodify);
+            send_header(clientfd, 501, content);
+            //open_send_file(clientfd, "./html/501.html");
             break;
     }
-
+    sprintf(temp, " %d %d", statuscode, datasent);
+    strcat(logcontent, temp);
+    printf("%s", logcontent);
+    record_std(logcontent);
     return;
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
    
-    int sockfd, connfd, backlog = 30, daemonflag = 0, logflag = 1;
+    int sockfd, connfd, backlog = 30, daemonflag = 0;
     struct sockaddr clientsockaddr;
     char clientip[50];
     struct sigaction sig;
     char loginusername[20];
     struct passwd *ps;
-    char webpath[200] = "./", webrealpath[200];
+    char webpath[200] = "./", webrealpath[200], logfilename[200] = "syslog", logfilepath[200];
     char port[10] = "8080";
-    FILE *config;
+    FILE *config, *logfile, *errlogfile;
 
     //Read configuration file
     printf("Loading configuration file\n");
@@ -245,6 +237,47 @@ int main(int argc, char * argv[])
         printf("Loading configuration file is finished\n");
         fclose(config);
     }
+
+    // check arguements
+    if (argc > 1)
+    {
+        int i;
+        for(i = 1; i < argc; i++)
+        {
+            if (argv[i][0] != '-')
+            {
+                printf("Option error\n");
+                return 1;
+            }  
+            switch(argv[i][1])
+            {
+                case 'h':
+                    printf("hello, Im the help text\n");
+                    break;
+                case 'p':
+                    
+                    strcpy(port, argv[i + 1]);
+                    i++;
+                    break;
+                case 'd':
+                    daemonflag = 1;
+                    break;
+                case 'l':
+                    if (i + 1 >= argc || argv[i + 1][0] == '-')
+                    {
+                        printf("Opition error: \"-f\" need a file name\n");
+                        return 0;
+                    }
+                    strcpy(logfilename, argv[i + 1]);
+                    i++;
+                    break;
+                case 's':
+                    //handle_method
+                    break;
+                    
+            }
+        }
+    }
     // use chroot to specify the root dictionary and then drop the root privilege
     getlogin_r(loginusername, 20);
     if((ps = getpwnam(loginusername)) == NULL)
@@ -273,6 +306,24 @@ int main(int argc, char * argv[])
         }
     }
 
+    // open log file
+    // rwx:7, rw-:6, r-x:5, r--:4, -wx:3, -w-:2, --x:1, ---:0
+    mkdir("./log", 0744);
+    //umask(022);
+    //open log files
+    sprintf(logfilepath, "./log/%s.log", logfilename);
+    if (open_std_log_file(logfilepath) < 0)
+    {
+        printf("server error: open standard log file failed\n");
+        return -1;
+    }
+    sprintf(logfilepath, "./log/%s.err", logfilename);
+    if (open_err_log_file(logfilepath) < 0)
+    {
+        printf("server error: open error log file failed\n");
+        return -1;
+    }
+
     //start listen socket
     sockfd = start_listen(port, backlog);
     if (sockfd < 0)
@@ -280,6 +331,9 @@ int main(int argc, char * argv[])
         printf("Server fail to start when start listening\n");
         return -1;
     }
+
+
+
     //prevent zombie process
     /*
     sig.sa_handler = SIG_DFL;
@@ -303,14 +357,6 @@ int main(int argc, char * argv[])
     //daemon(1, 1);
     //
     //check logflag 0 means use system log, 1 means use the specified file
-    if (logflag == 0)
-    {
-        openlog("webserver", LOG_CONS, LOG_USER);
-    }
-    else
-    {
-        
-    }
    while(1)
     {
         int clientaddrlen = sizeof(clientsockaddr); 
@@ -326,7 +372,7 @@ int main(int argc, char * argv[])
         //printf("\nGot connection from %s\n", clientip);
         //printf("Require time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
         char formattedtime[50];
-        log_get_current_time(formattedtime);
+        stdlog_get_current_time(formattedtime);
         printf("%s\n", formattedtime);
         /*
         get_client_ip(connfd);

@@ -56,15 +56,28 @@ int split_filename_path(char *url, char *filename, char *path)
 int parse_url(char *url, char *realurl, char *argu)
 {
     char *temp;
+    char tempurl[200];
     char filetype[21] = "";
     int filetypeflag;
-    if ((temp = strstr(url, "?")) != NULL)
+    char workpath[200];
+    sprintf(tempurl, ".%s", url);
+    if ((temp = strstr(tempurl, "?")) != NULL)
     {
         strcpy(argu, temp + 1);
         *temp = 0;
     }
-    realpath(url, realurl);
-    if (strcmp(url, "./") == 0)
+    realpath(tempurl, realurl);
+    printf("realpath: %s\n", realurl);
+    realpath("./", workpath);
+
+    if(strstr(realurl, workpath) == NULL)
+    {
+        printf("Parse_url: client trying to access a path out of area\n");
+        return 403;
+    }
+
+
+    if (strcmp(tempurl, "./") == 0)
     {
         strcat(realurl, "/html/index.html"); 
         return 0;
@@ -83,8 +96,6 @@ int parse_url(char *url, char *realurl, char *argu)
     {
         return filetypeflag;
     }
-    char path[1000], filename[1000];
-   // split_filename_path(realurl, path, filename);
     
     return 0;
 }
