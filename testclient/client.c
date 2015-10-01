@@ -28,7 +28,7 @@ int main()
     freeaddrinfo(servifo);
     char msg[100000];
     FILE * f = fopen("msg.txt", "r+");
-    fread(msg, sizeof(char), 26, f);
+    fread(msg, sizeof(char), 2600, f);
     int len = strlen(msg);
     printf("%d\n", len);
     send(sockfd, msg, len, 0);

@@ -28,3 +28,6 @@
 [Thu Oct 01 16:58:53 2015] [notice] [client 127.0.0.1] unknown file type ico: /home/alex/dv1457_unix_programing/DV1457-unix-programming-assignment2/webserver_c/www/favicon.ico
 [Thu Oct 01 17:04:37 2015] [notice] [client 127.0.0.1] unknown file type ico: /home/alex/dv1457_unix_programing/DV1457-unix-programming-assignment2/webserver_c/www/favicon.ico
 [Thu Oct 01 17:15:07 2015] [notice] [client 127.0.0.1] unknown file type ico: /home/alex/dv1457_unix_programing/DV1457-unix-programming-assignment2/webserver_c/www/favicon.ico
+[Thu Oct 01 22:52:35 2015] [notice] [client 127.0.0.1] Bad Request: 
+[Thu Oct 01 22:53:06 2015] [notice] [client 127.0.0.1] Bad Request: 
+[Thu Oct 01 22:54:39 2015] [error] [client 127.0.0.1] Client send too large data: /
