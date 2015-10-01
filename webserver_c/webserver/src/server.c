@@ -21,91 +21,109 @@
 #include"network.h"
 #include"process.h"
 
-#define MAXHEADLENGTH 1000
+#define MAXHEADLENGTH 2000
 
+char webpath[200] = "./";
+
+//to do overflow of method, url and version
+//to do why buflen is only 512
 void handle_it(int clientfd)
 {
-    char method[10], url[4000], version[10];
-    char content[2000], filelastmodify[50], res[50], buf[10000] = "", argu[200], parsedurl[1000];
-    char logcontent[100], temp[1000];
+    char method[10], url[4000], version[20];
+    char content[2000], filelastmodify[50], buf[10000] = "", argu[200], parsedurl[1000], loglevel[10];
+    char errlogcontent[1000], logcontent[1000], temp[1000], temp2[1000], abrequestpath[1000], clientip[20], errmsg[200] = "";
+    int statuscode;
     int recv_flag, datasent = 0;
     FILE *f;
     time_t t;
     struct tm *ti;
 
-    if((recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH)) < 0)
+    signal(SIGPIPE, SIG_IGN);
+    recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH);
+    if(recv_flag < 0)
     {
+        errlog_get_current_time(temp);
+        get_client_ip(clientfd, clientip);
         switch(recv_flag)
         {
             case -1:
-            printf("Client closed socket already.\n");
-            break;
+                sprintf(errmsg, "Client send too large data");
+                sprintf(errlogcontent, "%s [error] [client %s] %s: /", temp, clientip, errmsg);
+                break;
             case -2:
-            printf("Client send too large data\n");
-            break;
+                sprintf(errmsg, "file(%s) function(%s) line(%d) %s", __FILE__, __FUNCTION__, __LINE__, strerror(errno));
+                sprintf(errlogcontent, "%s [error] [client %s] %s: /", temp, clientip, errmsg);
+                break;
             case -3:
-            printf("server recv_data: unknown error\n");
-            break;
+                sprintf(errmsg, "Client didn't send any data");
+                sprintf(errlogcontent, "%s [warn] [client %s] %s: /", temp, clientip, errmsg);
+                break;
         }
+        record_err(errlogcontent);
+        printf("%s\n", errlogcontent);
         return;
     }
-    get_client_ip(clientfd, temp);
+    get_client_ip(clientfd, clientip);
     // Ignore the second and third colume. they can be added here if necessary
-    sprintf(logcontent, "%s - - ", temp);
-    log_get_current_time(temp);
+    sprintf(logcontent, "%s - - ", clientip);
+    stdlog_get_current_time(temp);//temp is ip addr 
     strcat(logcontent, temp);
-
-    char *requirebody = get_method(buf, method, url, version);
-    printf("Require method: %s\nRequire url: %s\nHttp version: %s\n", method, url, version);
-    sprintf(temp, " \"%s %s %s\"", method, url, version);
-    strcat(logcontent, temp);
-    int statuscode;
-    if ((statuscode = parse_url(url, parsedurl, argu)) == 0 )
+    statuscode = get_method(buf, method, url, version);
+//    printf("%s %s %s %d\n", method, url, version, statuscode);
+    if(statuscode == 0)
     {
-        char contenttype[50];
-        char type[20];
-        int contenttypefg;
-        get_file_type(parsedurl, type);
-        if ((contenttypefg = get_content_type(type, contenttype)) == 0)
+        sprintf(temp, " \"%s %s %s\"", method, url, version);
+        strcat(logcontent, temp);
+        statuscode = parse_url(url, parsedurl, argu);
+        sprintf(temp, "%s%s", webpath, url);
+        realpath(temp, abrequestpath);
+        printf("method: %s, url: %s, version: %s\n", method, url, version);
+        if (statuscode == 0 )
         {
-            if (!strcmp(method, "GET") || !strcmp(method, "HEAD"))
+            char contenttype[50];
+            char type[20];
+            int contenttypefg;
+            get_file_type(parsedurl, type);
+            if ((contenttypefg = get_content_type(type, contenttype)) == 0)
             {
-                f = fopen(parsedurl, "rb");
-                if (f == NULL)
+                if (!strcmp(method, "GET") || !strcmp(method, "HEAD"))
                 {
-                    statuscode = 404; 
-                    printf("Required file %s not exist\n", parsedurl);
+                    f = fopen(parsedurl, "rb");
+                    if (f == NULL)
+                    {
+                        statuscode = 404; 
+                    }
+                    else
+                    {
+                        strcat(contenttype, "; charset=utf-8");
+                        t = get_file_last_modify(parsedurl);
+                        ti = localtime(&t);
+                        strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
+                        sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
+                        send_header(clientfd, 200, content);
+                        if (strcmp(method, "GET") == 0)
+                        {    
+                            datasent = send_file(clientfd, f);
+                        }
+                        statuscode = 200;
+                        fclose(f);
+                    }
                 }
                 else
                 {
-                    strcat(contenttype, "; charset=utf-8");
-                    t = get_file_last_modify(parsedurl);
-                    ti = localtime(&t);
-                    strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-                    sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
-                    send_header(clientfd, 200, content);
-                    if (strcmp(method, "GET") == 0)
-                    {    
-                        datasent = send_file(clientfd, f);
-                    }
-                    statuscode = 200;
-                    fclose(f);
+                    statuscode = 501;
                 }
             }
             else
             {
-                statuscode = 501;
+                switch(contenttypefg)
+                {
+                    case 1:
+                    statuscode = 400;
+                    sprintf(errmsg, "unknown file type %s: %s", type, abrequestpath);
+                    break;
+                } 
             }
-        }
-        else
-        {
-            switch(contenttypefg)
-            {
-                case 1:
-                statuscode = 400;
-                printf("server error: get_content_type, HEAD method, unknown content_type");
-                break;
-            } 
         }
     }
     switch(statuscode)
@@ -117,6 +135,9 @@ void handle_it(int clientfd)
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/400.html"), filelastmodify);
             send_header(clientfd, 400, content);
             datasent = open_send_file(clientfd, "./html/400.html");
+            strcpy(loglevel, "notice");
+            if(errmsg[0] == 0)
+                sprintf(errmsg, "Bad Request: %s", abrequestpath);
             break;
         case 403:
             t = get_file_last_modify("./html/403.html");
@@ -125,6 +146,9 @@ void handle_it(int clientfd)
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/403.html"), filelastmodify);
             send_header(clientfd, 403,content);
             datasent = open_send_file(clientfd, "./html/403.html");
+            strcpy(loglevel, "notice");
+            if(errmsg[0] == 0)
+                sprintf(errmsg, "Forbidden: %s", abrequestpath);
             break;
         case 404:
             t = get_file_last_modify("./html/404.html");
@@ -133,6 +157,9 @@ void handle_it(int clientfd)
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/404.html"), filelastmodify);
             send_header(clientfd, 404, content);
             datasent = open_send_file(clientfd, "./html/404.html");
+            strcpy(loglevel, "notice");
+            if(errmsg[0] == 0)
+                sprintf(errmsg, "Not Found: %s", abrequestpath);
             break;
         case 500:
             t = get_file_last_modify("./html/500.html");
@@ -141,38 +168,50 @@ void handle_it(int clientfd)
             sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/500.html"), filelastmodify);
             send_header(clientfd, 500, content);
             //open_send_file(clientfd, "./html/500.html");
+            strcpy(loglevel, "error");
+            if(errmsg[0] == 0)
+                sprintf(errmsg, "Internal server Error: %s", abrequestpath);
             break;
         case 501:
             t = get_file_last_modify("./html/501.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/501.html"), filelastmodify);
+            sprintf(errmsg, "Method %s is nor implemented: %s", method, url);
             send_header(clientfd, 501, content);
             //open_send_file(clientfd, "./html/501.html");
+            strcpy(loglevel, "error");
+            if(errmsg[0] == 0)
+                sprintf(errmsg, "Not Implemented: %s", abrequestpath);
             break;
+        
+    }
+    if (errmsg[0] != 0)
+    {
+        errlog_get_current_time(temp);
+        sprintf(errlogcontent, "%s [%s] [client %s] %s", temp, loglevel, clientip, errmsg); 
+        printf("%s\n", errlogcontent);
+        record_err(errlogcontent);
     }
     sprintf(temp, " %d %d", statuscode, datasent);
     strcat(logcontent, temp);
-    printf("%s", logcontent);
+    printf("%s\n", logcontent);
     record_std(logcontent);
     return;
 }
 
 int main(int argc, char *argv[])
 {
-   
     int sockfd, connfd, backlog = 30, daemonflag = 0;
     struct sockaddr clientsockaddr;
-    char clientip[50];
-    struct sigaction sig;
     char loginusername[20];
     struct passwd *ps;
-    char webpath[200] = "./", webrealpath[200], logfilename[200] = "syslog", logfilepath[200];
+    char  webrealpath[200], logfilename[200] = "syslog", logfilepath[200];
     char port[10] = "8080";
-    FILE *config, *logfile, *errlogfile;
+    FILE *config;
 
+    realpath("./", webpath);
     //Read configuration file
-    printf("Loading configuration file\n");
     
     if ((config = fopen(".lab3-config", "r")) == NULL)
     {
@@ -182,9 +221,10 @@ int main(int argc, char *argv[])
     {
         char conf_buf[2001];
         int readlen = fread(conf_buf, sizeof(char), 2048, config);
-        conf_buf[readlen] = 0;
         int loc;
         char res[200];
+
+        conf_buf[readlen] = 0;
         loc = find_label(conf_buf, "PORT=", res);
         if (loc == -1)
         {
@@ -234,7 +274,6 @@ int main(int argc, char *argv[])
                 printf("The value of \"DEFAULT_REQUEST_HANDLING_METHOD\" is not valid\n");
             }
         }
-        printf("Loading configuration file is finished\n");
         fclose(config);
     }
 
@@ -246,16 +285,20 @@ int main(int argc, char *argv[])
         {
             if (argv[i][0] != '-')
             {
-                printf("Option error\n");
+                printf("Option error\nPlease use -h to get some help\n");
                 return 1;
             }  
             switch(argv[i][1])
             {
                 case 'h':
-                    printf("hello, Im the help text\n");
-                    break;
+                    printf("User manual\n");
+                    printf("-h, Get help information\n");
+                    printf("-p portnumber, Set server port\n");
+                    printf("-d, Run as a daemon process\n");
+                    printf("-l <logfilename>, Record log file to <logfilename>.log and <logfilename>.err. The path of log files is WEBSERVERROOT/log\n");
+                    printf("-s, Set handling method\n");
+                    return 0;
                 case 'p':
-                    
                     strcpy(port, argv[i + 1]);
                     i++;
                     break;
@@ -274,7 +317,9 @@ int main(int argc, char *argv[])
                 case 's':
                     //handle_method
                     break;
-                    
+                default:
+                    printf("Option error\nPlease use -h to get some help\n");
+                    return 1;
             }
         }
     }
@@ -357,7 +402,8 @@ int main(int argc, char *argv[])
     //daemon(1, 1);
     //
     //check logflag 0 means use system log, 1 means use the specified file
-   while(1)
+    int i = 0;
+    while(1)
     {
         int clientaddrlen = sizeof(clientsockaddr); 
         connfd = accept(sockfd, &clientsockaddr, &clientaddrlen);
@@ -371,13 +417,9 @@ int main(int argc, char *argv[])
         //inet_ntop(clientsockaddr.ss_family, get_in_addr((struct sockaddr *)&clientsockaddr), clientip, sizeof clientip);
         //printf("\nGot connection from %s\n", clientip);
         //printf("Require time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
-        char formattedtime[50];
-        stdlog_get_current_time(formattedtime);
-        printf("%s\n", formattedtime);
         /*
         get_client_ip(connfd);
         */
-        signal(SIGPIPE, SIG_IGN);
         handle_it_process(connfd, sockfd);
         close(connfd);
     }

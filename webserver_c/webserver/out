@@ -1,0 +1,2 @@
+gcc -g -Wall -Iinclude -c src/server.c -o objects/server.o
+gcc -g -Wall -Iinclude -c src/server.c -o objects/server.o

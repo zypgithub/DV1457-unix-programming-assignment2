@@ -26,10 +26,11 @@ int main()
     sockfd = socket(servifo->ai_family, servifo->ai_socktype, servifo->ai_protocol);
     connect(sockfd, servifo->ai_addr, servifo->ai_addrlen);
     freeaddrinfo(servifo);
-    char msg[1000];
+    char msg[100000];
     FILE * f = fopen("msg.txt", "r+");
-    fread(msg, sizeof(char), 999, f);
+    fread(msg, sizeof(char), 26, f);
     int len = strlen(msg);
+    printf("%d\n", len);
     send(sockfd, msg, len, 0);
     while(1)
     {
@@ -42,5 +43,6 @@ int main()
         }
         printf("rec:\n%s\n", rec);
     }
+    fclose(f);
     
 }

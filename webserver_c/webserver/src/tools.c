@@ -62,12 +62,12 @@ void stdlog_get_current_time(char *formattedtime)
 {
     struct tm *ti;
     get_current_time(&ti);
-    strftime(formattedtime, 50, "[%e/%b/%Y:%H:%M:%S %z]", ti);
+    strftime(formattedtime, 50, "[%d/%b/%Y:%H:%M:%S %z]", ti);
 }
 
 void errlog_get_current_time(char *formattedtime)
 {
     struct tm *ti;
     get_current_time(&ti);
-    strftime(formattedtime, 50, "[%a %b %e %H:%M:%S %Y]", ti);
+    strftime(formattedtime, 50, "[%a %b %d %H:%M:%S %Y]", ti);
 }

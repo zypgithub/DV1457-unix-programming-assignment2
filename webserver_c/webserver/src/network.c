@@ -86,16 +86,16 @@ int start_listen(char* port, int backlog)
     //printf("Server has started\n");
     if( p->ai_family == AF_INET6 )
     {
-        printf("IP version: ipv6\n");
+        //printf("IP version: ipv6\n");
     }
-    if( p->ai_family == AF_INET)
+    else if( p->ai_family == AF_INET)
     {
-        printf("IP version: ipv4\n");
+        // printf("IP version: ipv4\n");
         // char ipaddr[100];
         // inet_atop(p->ai_family, get_in_addr((struct aockaddr *)p->ai_addr), ipaddr, sizeof(ipaddr));
         struct sockaddr_in *addr;
         addr = (struct sockaddr_in *)p->ai_addr; 
-        printf("local ip: http://%s:%s\n", inet_ntoa((struct in_addr)addr->sin_addr), port);
+        printf("Address: http://%s:%s\n", inet_ntoa((struct in_addr)addr->sin_addr), port);
     }
     freeaddrinfo(servinfo);
     return sockfd;
@@ -113,7 +113,7 @@ int send_data(int clientfd, char *buf, int len)
         //printf("%d bytes data has been sent!\n", sentlen_onetime);
         if(sentlen_onetime < 0)
         {
-            if(errno == SIGPIPE)
+            if(errno == EPIPE)
             {
                 printf("client socket has closed\n");
                 close(clientfd);
@@ -157,45 +157,71 @@ int send_header(int clientfd, int status_code, char *content)
     send_data(clientfd, head , strlen(head));
 }
 // get require method, url and http version, return a pointer that point at the begining of next line
-char *get_method(char *buf, char *method, char *url, char *version)
+int get_method(char *buf, char *method, char *url, char *version)
 {
-    char nextline[50];
-    sscanf(buf, "%s %s %s %s", method, url, version, nextline);
-   // printf("method: %s\nurl: %s\nversion: %s\n", method, url, version);
-    return strstr(buf, nextline);
+    int i, j;
+    for(i = 0; buf[i] == ' '; i++);
+    for(j = 0; buf[i] != 0 && buf[i] != ' ' && j < 10 && buf[i] != '\n' && buf[i] != '\r'; j++, i++)
+        method[j] = buf[i];
+    if (buf[i] == 0 || j > 9 || buf[i] == '\n' || buf[i] == '\r')
+        return 400;
+    else
+        method[j] = 0;
 
-}
+    for(; buf[i] == ' '; i++);
+    for(j = 0; buf[i] != 0 && buf[i] != ' ' && j < 4000 && buf[i] != '\n' && buf[i] != '\r'; j++, i++)
+        url[j] = buf[i];
+    if(buf[i] == 0 || j > 3999 || buf[i] == '\n' || buf[i] == '\r')
+        return 400;
+    else
+        url[j] = 0;
+
+    for(; buf[i] == ' '; i++);
+    for(j = 0; buf[i] != 0 && buf[i] != ' ' && j < 20 && buf[i] !='\n' && buf[i] != '\r'; j++, i++)
+    {
+        version[j] = buf[i];
+    }
+    if(j > 19)
+        return 400;
+    else
+        version[j] = 0;
+    return 0;
+}    
+
+
 
 // receive data
-// return code : -1 connection broken; -2 Request too large; -3 other error 
+// return code : -1 connection broken; -2 Request too large; -3 server accepted a connection but didn't receive any data from client.  
 // clientfd: connect socket, buf: data received, maxlen: maxlen expected, if this value is -1, means no limited
 int recv_data(int clientfd, char *buf, int maxlen)
 {
     int rec_len;
-    char recv_data[513];
-    int total_data = 0;
+    char recvdata[513];
+    long total_data = 0;
     errno = 0;
-
-    for(rec_len = recv(clientfd, buf, 512, 0); rec_len > 0; rec_len = recv(clientfd, buf, 512, MSG_DONTWAIT))
+    *buf = 0;
+    for(rec_len = recv(clientfd, recvdata, 512, 0); rec_len > 0; rec_len = recv(clientfd, recvdata, 512, MSG_DONTWAIT))
     {
-        sprintf(buf, "%s%s", buf, recv_data);
+        recvdata[rec_len] = 0;
+        strcat(buf,recvdata);
         total_data += rec_len;
+    //    printf("%ld\n", total_data);
         if(total_data > maxlen && maxlen != -1)
-            return -2;
+            return -1;
     }
-    if(rec_len < 0)
+    if (rec_len < 0)
     {
         if(errno != EAGAIN && errno != EWOULDBLOCK)
         {
-            printf("Client: recv %d\n", rec_len);
-            return -3;
+            return -2;
         }
     }
-    else if(rec_len == 0)
+    if (total_data == 0)
     {
-        printf("Client: connection break\n%s\n", strerror(errno));
-        return -1;
+        return -3;
     }
+    //printf("buf: %s\n", buf);
+    //printf("total_data:%ld, rec_len: %d, errno: %s\n", total_data, rec_len, strerror(errno));
     return 0;
 }
 

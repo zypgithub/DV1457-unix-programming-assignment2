@@ -65,14 +65,14 @@ int parse_url(char *url, char *realurl, char *argu)
     {
         strcpy(argu, temp + 1);
         *temp = 0;
+        return 400;
     }
     realpath(tempurl, realurl);
-    printf("realpath: %s\n", realurl);
     realpath("./", workpath);
 
     if(strstr(realurl, workpath) == NULL)
     {
-        printf("Parse_url: client trying to access a path out of area\n");
+        //printf("Parse_url: client is trying to access a path out of area\n");
         return 403;
     }
 
