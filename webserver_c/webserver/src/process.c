@@ -76,8 +76,8 @@ int daemon_printpid(char *path)
 //      close(STDIN_FILENO);
 //      close(STDOUT_FILENO);
 //      close(STDERR_FILENO);
-        freopen("./output", "awb+", stdout);
-        freopen("./erroutput", "awb+", stderr);
+        //freopen("./output", "awb+", stdout);
+        //freopen("./erroutput", "awb+", stderr);
         // final step: handle siginals
         // SIGCHLD: when a process terminate, this signal will sent to the father process
         // SIGTSTP: usually, this signal is get from ctrl + z from keyboard.
