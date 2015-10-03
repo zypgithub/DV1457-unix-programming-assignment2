@@ -46,7 +46,6 @@ void handle_it(int clientfd)
     {
         errlog_get_current_time(temp);
         get_client_ip(clientfd, clientip);
-        printf("buf: %s", buf);
         switch(recv_flag)
         {
             case -1:
@@ -199,6 +198,7 @@ void handle_it(int clientfd)
     strcat(logcontent, temp);
     printf("%s\n", logcontent);
     record_std(logcontent);
+    shutdown(clientfd, SHUT_RDWR);
     return;
 }
 
@@ -207,6 +207,7 @@ void single_mode(int sockfd, struct sockaddr *clientsockaddr)
 {
     int connfd;
     int clientaddrlen = sizeof(clientsockaddr); 
+    printf("Server started in single process mode\n");
     while(1)
     {
         connfd = accept(sockfd, clientsockaddr, &clientaddrlen);
@@ -224,7 +225,7 @@ void single_mode(int sockfd, struct sockaddr *clientsockaddr)
 int main(int argc, char *argv[])
 {
     int sockfd, connfd, backlog = 30, daemonflag = 0;
-    int modeflag = 1;
+    int modeflag = 3;
     struct sockaddr clientsockaddr;
     char loginusername[20];
     struct passwd *ps;
@@ -287,6 +288,8 @@ int main(int argc, char *argv[])
                 modeflag = 2;
             else if(strcmp(res, "SINGLE") == 0)
                 modeflag = 0;
+            else if(strcmp(res, "THREAD_POOL") == 0)
+                modeflag = 3;
             else
                 printf("The value of \"HANDLE_METHOD\" is not valid\n");
         }
@@ -312,7 +315,7 @@ int main(int argc, char *argv[])
                     printf("-p portnumber, Set server port.\n");
                     printf("-d, Run as a daemon process.\n");
                     printf("-l <logfilename>, Record log file to <logfilename>.log and <logfilename>.err. The path of log files is WEBSERVERROOT/log.\n");
-                    printf("-s <single>|<processes>|<threads>, Set handling method.\n");
+                    printf("-s single|processes|threads|threadpool, Set handling method.\n");
                     return 0;
                 case 'p':
                     strcpy(port, argv[i + 1]);
@@ -344,6 +347,8 @@ int main(int argc, char *argv[])
                         modeflag = 1;
                     else if (strcmp(argv[i + 1], "threads") == 0)
                         modeflag = 2;
+                    else if (strcmp(argv[i + 1], "threadpool") == 0)
+                        modeflag = 3;
                     else
                     {
                         printf("unknown handle method, use -h to get some help.\n");
@@ -407,7 +412,7 @@ int main(int argc, char *argv[])
     }
 
 
-    printf("Server start success!\n");
+    //printf("Server start!\n");
     
     // check request handle method
     if (daemonflag == 1)
@@ -426,8 +431,9 @@ int main(int argc, char *argv[])
         case 2:
             thread_mode(sockfd, &clientsockaddr);
             break;
+        case 3:
+            thread_pool_mode(sockfd, &clientsockaddr);
+            break;
     }
-    
-    
     return 0;
 }

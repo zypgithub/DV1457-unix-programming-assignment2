@@ -45,6 +45,7 @@ void process_mode(int sockfd, struct sockaddr *clientsockaddr)
 {
     int clientaddrlen = sizeof(*clientsockaddr);
     int connfd;
+    printf("Server started in mutiple process mode.\n");
     while(1)
     {
         connfd = accept(sockfd, clientsockaddr, &clientaddrlen);

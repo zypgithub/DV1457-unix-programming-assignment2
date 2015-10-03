@@ -10,7 +10,8 @@
 
 typedef struct ThreadWorker
 {
-    pthread_cond_t worker;
+    pthread_cond_t threadcond;
+    pthread_t threadid;
     int clientfd;
     struct ThreadWorker * next;
 }ThreadWorker;
@@ -20,6 +21,11 @@ typedef struct ThreadPool
     ThreadWorker *last;
 }ThreadPool;
 
-
 void *handle_it_thread(void *);
+void thread_pool_push(ThreadWorker *);
+void thread_pool_destory();
+
+pthread_mutex_t inpoollock, outpoollock;
+pthread_mutex_t waitlock;
+ThreadPool pool;
 #endif
