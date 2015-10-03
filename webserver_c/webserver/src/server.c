@@ -72,7 +72,6 @@ void handle_it(int clientfd)
     stdlog_get_current_time(temp);//temp is ip addr 
     strcat(logcontent, temp);
     statuscode = get_method(buf, method, url, version);
-//    printf("%s %s %s %d\n", method, url, version, statuscode);
     if(statuscode == 0)
     {
         sprintf(temp, " \"%s %s %s\"", method, url, version);
@@ -220,9 +219,7 @@ int main(int argc, char *argv[])
     //Read configuration file
     
     if ((config = fopen(".lab3-config", "r")) == NULL)
-    {
         printf("Configuration file is not found\n");
-    }
     else
     {
         char conf_buf[2001];
@@ -233,76 +230,47 @@ int main(int argc, char *argv[])
         conf_buf[readlen] = 0;
         loc = find_label(conf_buf, "PORT=", res);
         if (loc == -1)
-        {
             printf("Did not find the arguement: PORT\n");
-        }
         else
-        {
             strcpy(port, res);
-        }
         
         loc = find_label(conf_buf, "BACKLOG=", res);
         if (loc == -1)
-        {
             printf("Did not find the arguement: BACKLOG\n");
-        }
         else
-        {
             sscanf(res, "%d", &backlog);
-        }
 
         loc = find_label(conf_buf, "DOCUMENT_ROOT=", res);
         if (loc == -1)
-        {
             printf("Did not find the arguement: DOCUMENT_ROOT\n");
-        }
         else
-        {
             strcpy(webpath, res);
-        }
+
         loc = find_label(conf_buf, "DEFAULT_REQUEST_HANDLING_METHOD=", res);
         if (loc == -1)
-        {
             printf("Did not find the arguement: DEFAULT_REQUEST_HANDLING_METHOD\n");
-        }
         else
         {
             if (strcmp(res, "NORMAL") == 0)
-            {
                 daemonflag = 0;
-            }
             else if(strcmp(res, "DAEMON") == 0)
-            {
                 daemonflag = 1;
-            }
             else
-            {
                 printf("The value of \"DEFAULT_REQUEST_HANDLING_METHOD\" is not valid\n");
-            }
         }
         loc = find_label(conf_buf, "HANDLE_METHOD=", res);
         if (loc == -1)
-        {
-            printf("Did not find the arguement: HANDLE_METHOD");
-        }
+            printf("Did not find the arguement: HANDLE_METHOD\n");
         else
         {
             if(strcmp(res, "PROCESSES") == 0)
-            {
                 modeflag = 1;
-            }
             else if(strcmp(res, "THREADS") == 0)
-            {
                 modeflag = 2;
-            }
             else if(strcmp(res, "SINGLE") == 0)
-            {
                 modeflag = 0;
-            }
             else
-            {
                 printf("The value of \"HANDLE_METHOD\" is not valid\n");
-            }
         }
         fclose(config);
     }
@@ -360,10 +328,9 @@ int main(int argc, char *argv[])
                     else
                     {
                         printf("unknown handle method, use -h to get some help.\n");
-                        return -1;
+                        return 1;
                     }
-                        
-                break;
+                    break;
                 default:
                     printf("Option error, Please use -h to get some help.\n");
                     return 1;
@@ -404,10 +371,7 @@ int main(int argc, char *argv[])
     {
         chdir(webrealpath);
         if(chroot(webrealpath) == -1)
-        {
-            printf("Cannot reset the root dir, reason: %s\n", strerror(errno));
-            //return -1;
-        }
+            printf("Cannot reset the root dir, because %s\n", strerror(errno));
         else
         {
             setuid(ps->pw_uid);
