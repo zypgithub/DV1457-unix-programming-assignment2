@@ -13,7 +13,12 @@
 #include<sys/socket.h>
 #include<errno.h>
 #include<pwd.h>
+#include<pthread.h>
 
+void *test(void *argv)
+{
+    printf("haha I'm number: %u\n", pthread_self());
+}
 int main()
 {
 
@@ -35,6 +40,7 @@ int main()
 */
     
     //FILE *f = fopen("/var/log/syslog", "aw");
+    /*
     openlog("webserver", NULL, LOG_USER);
     
     if (1 == NULL)
@@ -74,7 +80,13 @@ int main()
     char path[100];
     realpath("./", path);
     printf("%s\n", path);
-
+*/
+    int i;
+    for(i = 0; i < 10; i ++)
+    {
+        pthread_t tid;
+        pthread_create(&tid, NULL, &test, NULL);
+    }
 
     return 0;
 }
