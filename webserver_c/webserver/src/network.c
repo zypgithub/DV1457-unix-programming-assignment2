@@ -18,6 +18,7 @@
 #include<signal.h>
 #include<errno.h>
 
+#include<pthread.h>
 void *get_in_addr(struct sockaddr *s)
 {
     if(s->sa_family == AF_INET)
@@ -196,14 +197,16 @@ int get_method(char *buf, char *method, char *url, char *version)
 int recv_data(int clientfd, char *buf, int maxlen)
 {
     int rec_len;
-    char recvdata[513];
     long total_data = 0;
     errno = 0;
     *buf = 0;
-    for(rec_len = recv(clientfd, recvdata, 512, 0); rec_len > 0; rec_len = recv(clientfd, recvdata, 512, MSG_DONTWAIT))
+    pthread_t me = pthread_self();
+    //int ret = read(clientfd, buf, maxlen);
+    //for(rec_len = recv(clientfd, buf + total_data, 1024, 0); rec_len > 0; rec_len = recv(clientfd, buf + total_data, 1024, MSG_DONTWAIT))
+rec_len = recv(clientfd, buf + total_data, 1024, 0);
     {
-        recvdata[rec_len] = 0;
-        strcat(buf,recvdata);
+        //recvdata[rec_len] = 0;
+        //strcat(buf,recvdata);
         total_data += rec_len;
     //    printf("%ld\n", total_data);
         if(total_data > maxlen && maxlen != -1)
@@ -220,7 +223,7 @@ int recv_data(int clientfd, char *buf, int maxlen)
     {
         return -3;
     }
-    //printf("buf: %s\n", buf);
+    //buf[total_data] = 0;
     //printf("total_data:%ld, rec_len: %d, errno: %s\n", total_data, rec_len, strerror(errno));
     return 0;
 }
@@ -245,6 +248,11 @@ int get_content_type(char *type, char *contenttype)
     else if(!strcmp(type, "css"))
     {
         strcpy(contenttype, "text/css"); 
+        return 0;
+    }
+    else if(!strcmp(type, "ico"))
+    {
+        strcpy(contenttype, "image/x0icon");
         return 0;
     }
     else

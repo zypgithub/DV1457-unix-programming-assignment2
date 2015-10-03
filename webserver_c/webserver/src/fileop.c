@@ -10,30 +10,45 @@
 #include<string.h>
 #include<unistd.h>
 #include<errno.h>
+#include<syslog.h>
 #include<sys/stat.h>
+#include<pthread.h>
 #include<pwd.h>
 #include<time.h>
 
-FILE *logfile, *errlogfile;
+FILE *logfile = NULL, *errlogfile = NULL;
+pthread_mutex_t errlogmutexlock, stdlogmutexlock, sysloglock;
 
-int record_std(char *record)
+void record_std(char *record)
 {
     if(logfile == NULL)
     {
-        printf("Standard log file is not open yet\n");
-        return -1;
+        pthread_mutex_lock(&sysloglock);
+        syslog(LOG_INFO, record);
+        pthread_mutex_unlock(&sysloglock);
     }
-    fprintf(logfile, "%s\n", record);
+    else
+    {
+        pthread_mutex_lock(&stdlogmutexlock);
+        fprintf(logfile, "%s\n", record);
+        pthread_mutex_unlock(&stdlogmutexlock);
+    }
 }
 
-int record_err(char *record)
+void record_err(char *record)
 {
     if(errlogfile == NULL)
     {
-        printf("Error log file is not open yet\n");
-        return -1;
+        pthread_mutex_lock(&sysloglock);
+        syslog(LOG_ERR,record);
+        pthread_mutex_unlock(&sysloglock);
     }
-    fprintf(errlogfile, "%s\n", record);
+    else
+    {
+        pthread_mutex_lock(&errlogmutexlock);
+        fprintf(errlogfile, "%s\n", record);
+        pthread_mutex_unlock(&errlogmutexlock);
+    }
 }
 
 int get_file_size(char *path)
@@ -87,16 +102,22 @@ int open_send_file(int clientfd, char *path)
 }
 
 
-int open_err_log_file(char *path)
+int open_err_log_file(char *name)
 {
-    if (errlogfile != NULL)
+    if (name[0] == 0)
     {
-        printf("Error log file has been openned already\n");
+        pthread_mutex_init(&sysloglock, NULL);
+        openlog("webserver", NULL, LOG_USER);
         return 1;
     }
+    else if (errlogfile != NULL)
+        return 0;
     else
     {
-        errlogfile = fopen(path, "aw+");
+        char logfilepath[200];
+        pthread_mutex_init(&errlogmutexlock, NULL);
+        sprintf(logfilepath, "./log/%s.err", name);
+        errlogfile = fopen(logfilepath, "aw+");
         if (errlogfile == NULL)
         {
             printf("Cannot open error logfile\n");
@@ -107,16 +128,25 @@ int open_err_log_file(char *path)
 }
 
 
-int open_std_log_file(char *path)
+int open_std_log_file(char *name)
 {
-    if (logfile != NULL)
+
+    if (name[0] = 0)
     {
-        printf("Standard log file has been openned already\n");
+        pthread_mutex_init(&sysloglock, NULL);
+        openlog("webserver", NULL, LOG_USER);
         return 1;
+    }
+    else if (logfile != NULL)
+    {
+        return 0;
     }
     else
     {
-        logfile = fopen(path, "aw+");
+        char logfilepath[200];
+        pthread_mutex_init(&stdlogmutexlock, NULL);
+        sprintf(logfilepath, "./log/%s.log", name);
+        logfile = fopen(logfilepath, "aw+");
         if (logfile == NULL)
         {
             printf("Cannot open standard logfile\n");

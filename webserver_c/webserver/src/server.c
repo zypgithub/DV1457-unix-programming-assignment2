@@ -17,16 +17,17 @@
 #include<errno.h>
 #include<pwd.h>
 #include<syslog.h>
+#include<pthread.h>
 
 #include"network.h"
 #include"process.h"
+#include"../include/thread.h"
 
 #define MAXHEADLENGTH 2000
 
 char webpath[200] = "./";
 
-//to do overflow of method, url and version
-//to do why buflen is only 512
+
 void handle_it(int clientfd)
 {
     char method[10], url[4000], version[20];
@@ -40,10 +41,12 @@ void handle_it(int clientfd)
 
     signal(SIGPIPE, SIG_IGN);
     recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH);
+
     if(recv_flag < 0)
     {
         errlog_get_current_time(temp);
         get_client_ip(clientfd, clientip);
+        printf("buf: %s", buf);
         switch(recv_flag)
         {
             case -1:
@@ -77,7 +80,7 @@ void handle_it(int clientfd)
         statuscode = parse_url(url, parsedurl, argu);
         sprintf(temp, "%s%s", webpath, url);
         realpath(temp, abrequestpath);
-        printf("method: %s, url: %s, version: %s\n", method, url, version);
+        //printf("method: %s, url: %s, version: %s\n", method, url, version);
         if (statuscode == 0 )
         {
             char contenttype[50];
@@ -200,15 +203,18 @@ void handle_it(int clientfd)
     return;
 }
 
+
 int main(int argc, char *argv[])
 {
     int sockfd, connfd, backlog = 30, daemonflag = 0;
+    int modeflag = 2;
     struct sockaddr clientsockaddr;
     char loginusername[20];
     struct passwd *ps;
-    char  webrealpath[200], logfilename[200] = "syslog", logfilepath[200];
+    char  webrealpath[200], logfilename[200] = "";
     char port[10] = "8080";
     FILE *config;
+
 
     realpath("./", webpath);
     //Read configuration file
@@ -228,7 +234,7 @@ int main(int argc, char *argv[])
         loc = find_label(conf_buf, "PORT=", res);
         if (loc == -1)
         {
-            printf("Did not find arguement: PORT\n");
+            printf("Did not find the arguement: PORT\n");
         }
         else
         {
@@ -238,7 +244,7 @@ int main(int argc, char *argv[])
         loc = find_label(conf_buf, "BACKLOG=", res);
         if (loc == -1)
         {
-            printf("Did not find arguement: BACKLOG\n");
+            printf("Did not find the arguement: BACKLOG\n");
         }
         else
         {
@@ -248,7 +254,7 @@ int main(int argc, char *argv[])
         loc = find_label(conf_buf, "DOCUMENT_ROOT=", res);
         if (loc == -1)
         {
-            printf("Did not find arguement: DOCUMENT_ROOT\n");
+            printf("Did not find the arguement: DOCUMENT_ROOT\n");
         }
         else
         {
@@ -257,7 +263,7 @@ int main(int argc, char *argv[])
         loc = find_label(conf_buf, "DEFAULT_REQUEST_HANDLING_METHOD=", res);
         if (loc == -1)
         {
-            printf("Did not find arguement: DEFAULT_REQUEST_HANDLING_METHOD\n");
+            printf("Did not find the arguement: DEFAULT_REQUEST_HANDLING_METHOD\n");
         }
         else
         {
@@ -274,6 +280,30 @@ int main(int argc, char *argv[])
                 printf("The value of \"DEFAULT_REQUEST_HANDLING_METHOD\" is not valid\n");
             }
         }
+        loc = find_label(conf_buf, "HANDLE_METHOD=", res);
+        if (loc == -1)
+        {
+            printf("Did not find the arguement: HANDLE_METHOD");
+        }
+        else
+        {
+            if(strcmp(res, "PROCESSES") == 0)
+            {
+                modeflag = 1;
+            }
+            else if(strcmp(res, "THREADS") == 0)
+            {
+                modeflag = 2;
+            }
+            else if(strcmp(res, "SINGLE") == 0)
+            {
+                modeflag = 0;
+            }
+            else
+            {
+                printf("The value of \"HANDLE_METHOD\" is not valid\n");
+            }
+        }
         fclose(config);
     }
 
@@ -285,18 +315,18 @@ int main(int argc, char *argv[])
         {
             if (argv[i][0] != '-')
             {
-                printf("Option error\nPlease use -h to get some help\n");
+                printf("Option error, Please use -h to get some help.\n");
                 return 1;
             }  
             switch(argv[i][1])
             {
                 case 'h':
-                    printf("User manual\n");
-                    printf("-h, Get help information\n");
-                    printf("-p portnumber, Set server port\n");
-                    printf("-d, Run as a daemon process\n");
-                    printf("-l <logfilename>, Record log file to <logfilename>.log and <logfilename>.err. The path of log files is WEBSERVERROOT/log\n");
-                    printf("-s, Set handling method\n");
+                    printf("User manual.\n");
+                    printf("-h, Get help information.\n");
+                    printf("-p portnumber, Set server port.\n");
+                    printf("-d, Run as a daemon process.\n");
+                    printf("-l <logfilename>, Record log file to <logfilename>.log and <logfilename>.err. The path of log files is WEBSERVERROOT/log.\n");
+                    printf("-s <single>|<processes>|<threads>, Set handling method.\n");
                     return 0;
                 case 'p':
                     strcpy(port, argv[i + 1]);
@@ -308,7 +338,7 @@ int main(int argc, char *argv[])
                 case 'l':
                     if (i + 1 >= argc || argv[i + 1][0] == '-')
                     {
-                        printf("Opition error: \"-f\" need a file name\n");
+                        printf("Opition error: \"-f\" need a file name.\n");
                         return 0;
                     }
                     strcpy(logfilename, argv[i + 1]);
@@ -316,13 +346,47 @@ int main(int argc, char *argv[])
                     break;
                 case 's':
                     //handle_method
-                    break;
+                    if (i + 1 >= argc || argv[i + 1][0] == '-')
+                    {
+                        printf("Opition error: \"-s\" need a file name.\n");
+                        return 0;
+                    }
+                    if (strcmp(argv[i + 1], "single") == 0)
+                        modeflag = 0;
+                    else if (strcmp(argv[i + 1], "processes") == 0)
+                        modeflag = 1;
+                    else if (strcmp(argv[i + 1], "threads") == 0)
+                        modeflag = 2;
+                    else
+                    {
+                        printf("unknown handle method, use -h to get some help.\n");
+                        return -1;
+                    }
+                        
+                break;
                 default:
-                    printf("Option error\nPlease use -h to get some help\n");
+                    printf("Option error, Please use -h to get some help.\n");
                     return 1;
             }
         }
     }
+
+    // open log file
+    // rwx:7, rw-:6, r-x:5, r--:4, -wx:3, -w-:2, --x:1, ---:0
+    mkdir("./log", 0744);
+    //umask(022);
+    //open log files
+    if (open_std_log_file(logfilename) < 0)
+    {
+        printf("server error: open standard log file failed\n");
+        return -1;
+    }
+    if (open_err_log_file(logfilename) < 0)
+    {
+        printf("server error: open error log file failed\n");
+        return -1;
+    }
+
     // use chroot to specify the root dictionary and then drop the root privilege
     getlogin_r(loginusername, 20);
     if((ps = getpwnam(loginusername)) == NULL)
@@ -351,23 +415,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    // open log file
-    // rwx:7, rw-:6, r-x:5, r--:4, -wx:3, -w-:2, --x:1, ---:0
-    mkdir("./log", 0744);
-    //umask(022);
-    //open log files
-    sprintf(logfilepath, "./log/%s.log", logfilename);
-    if (open_std_log_file(logfilepath) < 0)
-    {
-        printf("server error: open standard log file failed\n");
-        return -1;
-    }
-    sprintf(logfilepath, "./log/%s.err", logfilename);
-    if (open_err_log_file(logfilepath) < 0)
-    {
-        printf("server error: open error log file failed\n");
-        return -1;
-    }
+    //prevent zombie process
+    prevent_zombie();
 
     //start listen socket
     sockfd = start_listen(port, backlog);
@@ -377,19 +426,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-
-
-    //prevent zombie process
-    /*
-    sig.sa_handler = SIG_DFL;
-    sig.sa_flags = SA_NOCLDWAIT;
-    if( sigaction(SIGCHLD, &sig, 0) < 0 )
-    {
-        printf("server: sigaction\n");
-        return -1;
-    }
-    */
-    prevent_zombie();
 
     printf("Server start success!\n");
     
@@ -403,28 +439,35 @@ int main(int argc, char *argv[])
     //
     //check logflag 0 means use system log, 1 means use the specified file
     int i = 0;
+    int *conn;
+    //pthread_t *tid;
+    pthread_t tid;
+    int clientaddrlen = sizeof(clientsockaddr); 
     while(1)
     {
-        int clientaddrlen = sizeof(clientsockaddr); 
         connfd = accept(sockfd, &clientsockaddr, &clientaddrlen);
         if(connfd == -1)
         {
             perror("server: accept\n");
             continue;
         }
-        //t = time(NULL);
-        //ti = localtime(&t);
-        //inet_ntop(clientsockaddr.ss_family, get_in_addr((struct sockaddr *)&clientsockaddr), clientip, sizeof clientip);
-        //printf("\nGot connection from %s\n", clientip);
-        //printf("Require time: %.2d-%.2d-%d %.2d:%.2d:%.2d\n", ti->tm_mon + 1, ti->tm_mday, ti->tm_year + 1990, ti->tm_hour, ti->tm_min, ti->tm_sec);
-        /*
-        get_client_ip(connfd);
-        */
-        handle_it_process(connfd, sockfd);
-        close(connfd);
+        switch(modeflag)
+        {
+            case 0:// single process
+                handle_it(connfd);
+                close(connfd);
+                break;;
+            case 1: // mutipule process
+                handle_it_process(connfd, sockfd);
+                close(connfd);
+                break;
+            case 2: // mutipule thread
+                conn = malloc(sizeof(int));
+                *conn = connfd;
+                pthread_create(&tid, NULL, &handle_it_thread, conn);
+                break;
+        }
     }
     close(sockfd);
-
-
     return 0;
 }

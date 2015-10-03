@@ -1,3 +1,0 @@
-PORT=8000
-BACKLOG=20
-DOCUMENT_ROOT=/home/alex/dv1457_unix_programing/DV1457-unix-programming-assignment2/webserver_c/start/
