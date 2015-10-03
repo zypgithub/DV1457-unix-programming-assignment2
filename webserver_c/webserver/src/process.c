@@ -10,7 +10,9 @@
 #include<string.h>
 #include<signal.h>
 #include<unistd.h>
+#include<sys/socket.h>
 #include<sys/stat.h>
+
 
 int prevent_zombie()
 {
@@ -37,6 +39,24 @@ void handle_it_process(int clientfd, int listenfd)
         close(clientfd);
         exit(0);
     }
+}
+
+void process_mode(int sockfd, struct sockaddr *clientsockaddr)
+{
+    int clientaddrlen = sizeof(*clientsockaddr);
+    int connfd;
+    while(1)
+    {
+        connfd = accept(sockfd, clientsockaddr, &clientaddrlen);
+        if(connfd == -1)
+        {
+            perror("server: accept\n");
+            continue;
+        }
+        handle_it_process(connfd, sockfd);
+        close(connfd);
+    }
+    close(sockfd);
 }
 
 int daemon_printpid(char *path)

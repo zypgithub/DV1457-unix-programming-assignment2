@@ -203,10 +203,28 @@ void handle_it(int clientfd)
 }
 
 
+void single_mode(int sockfd, struct sockaddr *clientsockaddr)
+{
+    int connfd;
+    int clientaddrlen = sizeof(clientsockaddr); 
+    while(1)
+    {
+        connfd = accept(sockfd, clientsockaddr, &clientaddrlen);
+        if(connfd == -1)
+        {
+            perror("server: accept\n");
+            continue;
+        }
+        handle_it(connfd);
+        close(connfd);
+    }
+    close(sockfd);
+}
+
 int main(int argc, char *argv[])
 {
     int sockfd, connfd, backlog = 30, daemonflag = 0;
-    int modeflag = 2;
+    int modeflag = 1;
     struct sockaddr clientsockaddr;
     char loginusername[20];
     struct passwd *ps;
@@ -319,6 +337,7 @@ int main(int argc, char *argv[])
                         printf("Opition error: \"-s\" need a file name.\n");
                         return 0;
                     }
+                    int j;
                     if (strcmp(argv[i + 1], "single") == 0)
                         modeflag = 0;
                     else if (strcmp(argv[i + 1], "processes") == 0)
@@ -330,9 +349,10 @@ int main(int argc, char *argv[])
                         printf("unknown handle method, use -h to get some help.\n");
                         return 1;
                     }
+                    i++;
                     break;
                 default:
-                    printf("Option error, Please use -h to get some help.\n");
+                    printf("Option error, Please use -h to get some help 111.\n");
                     return 1;
             }
         }
@@ -340,6 +360,13 @@ int main(int argc, char *argv[])
 
     // open log file
     // rwx:7, rw-:6, r-x:5, r--:4, -wx:3, -w-:2, --x:1, ---:0
+    if (realpath(webpath, webrealpath) == NULL)
+    {
+        printf("realpath error: %s\n", strerror(errno));
+        printf("server root path is invalid\n");
+        return -1;
+    }
+    chdir(webrealpath);
     mkdir("./log", 0744);
     //umask(022);
     //open log files
@@ -353,7 +380,6 @@ int main(int argc, char *argv[])
         printf("server error: open error log file failed\n");
         return -1;
     }
-
     // use chroot to specify the root dictionary and then drop the root privilege
     getlogin_r(loginusername, 20);
     if((ps = getpwnam(loginusername)) == NULL)
@@ -361,22 +387,12 @@ int main(int argc, char *argv[])
         printf("%s\n", strerror(errno));
         return -1;
     }
-    if (realpath(webpath, webrealpath) == NULL)
-    {
-        printf("realpath error: %s\n", strerror(errno));
-        printf("server root path is invalid\n");
-        return -1;
-    }
+    if(chroot(webrealpath) == -1)
+        printf("Cannot reset the root dir, because %s\n", strerror(errno));
     else
     {
-        chdir(webrealpath);
-        if(chroot(webrealpath) == -1)
-            printf("Cannot reset the root dir, because %s\n", strerror(errno));
-        else
-        {
-            setuid(ps->pw_uid);
-            setgid(ps->pw_gid);
-        }
+        setuid(ps->pw_uid);
+        setgid(ps->pw_gid);
     }
 
     //prevent zombie process
@@ -399,39 +415,19 @@ int main(int argc, char *argv[])
         printf("Server start running in background!\n");
         daemon_printpid(webrealpath);
     }
-    //daemon(1, 1);
-    //
-    //check logflag 0 means use system log, 1 means use the specified file
-    int i = 0;
-    int *conn;
-    //pthread_t *tid;
-    pthread_t tid;
-    int clientaddrlen = sizeof(clientsockaddr); 
-    while(1)
+    switch(modeflag)
     {
-        connfd = accept(sockfd, &clientsockaddr, &clientaddrlen);
-        if(connfd == -1)
-        {
-            perror("server: accept\n");
-            continue;
-        }
-        switch(modeflag)
-        {
-            case 0:// single process
-                handle_it(connfd);
-                close(connfd);
-                break;;
-            case 1: // mutipule process
-                handle_it_process(connfd, sockfd);
-                close(connfd);
-                break;
-            case 2: // mutipule thread
-                conn = malloc(sizeof(int));
-                *conn = connfd;
-                pthread_create(&tid, NULL, &handle_it_thread, conn);
-                break;
-        }
+        case 0:
+            single_mode(sockfd, &clientsockaddr);
+            break;
+        case 1:
+            process_mode(sockfd, &clientsockaddr);
+            break;
+        case 2:
+            thread_mode(sockfd, &clientsockaddr);
+            break;
     }
-    close(sockfd);
+    
+    
     return 0;
 }

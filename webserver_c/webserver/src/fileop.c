@@ -130,8 +130,7 @@ int open_err_log_file(char *name)
 
 int open_std_log_file(char *name)
 {
-
-    if (name[0] = 0)
+    if (name[0] == 0)
     {
         pthread_mutex_init(&sysloglock, NULL);
         openlog("webserver", NULL, LOG_USER);
