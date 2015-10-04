@@ -14,6 +14,8 @@
 
 #include"../include/thread.h"
 
+#define INITTHREADNUM 20
+#define INCRTHREADNUM 20
 void *handle_it_thread(void *argv)
 {
     pthread_t me = pthread_self();
@@ -142,7 +144,7 @@ void thread_pool_mode(int sockfd, struct sockaddr *clientsockaddr)
     signal(SIGQUIT, thread_pool_destory);
     signal(SIGTERM, thread_pool_destory);
     thread_pool_init();
-    thread_pool_getspace(10);
+    thread_pool_getspace(INITTHREADNUM);
     while(1)
     {
         connfd = accept(sockfd, clientsockaddr, &clientaddrlen);
@@ -156,7 +158,7 @@ void thread_pool_mode(int sockfd, struct sockaddr *clientsockaddr)
         if(temp == NULL)
         {    
             // some ploblem here, fix it
-            thread_pool_getspace(10);
+            thread_pool_getspace(INCRTHREADNUM);
             printf("new space has been assignned\n");
             temp = thread_pool_pop(&pool);
         }

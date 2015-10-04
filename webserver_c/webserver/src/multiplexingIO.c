@@ -13,15 +13,19 @@
 #include<signal.h>
 #include<../include/multiplexingIO.h>
 
-
+//#define debug
+#define linklist_way
+//#define loop_way
 void sock_linklist_init();
 void sock_linklist_insert(SockNode *);
 void sock_linklist_destroy();
-void sock_linklist_rm(SockNode *, SockNode *);
+void sock_linklist_rm(SockNode *, SockNode **);
 
+#ifdef linklist_way
 void multiplexing_IO_mode(int connfd, struct sockaddr *clientsockaddr)
 {
     fd_set read_fds;
+    FD_ZERO(&read_fds);
     signal(SIGHUP, sock_linklist_destroy);
     signal(SIGINT, sock_linklist_destroy);
     signal(SIGQUIT, sock_linklist_destroy);
@@ -69,7 +73,7 @@ void multiplexing_IO_mode(int connfd, struct sockaddr *clientsockaddr)
                 {
                     handle_it(curr->socknum, MSG_DONTWAIT);
                     close(curr->socknum);
-                    sock_linklist_rm(prev, curr);
+                    sock_linklist_rm(prev, &curr);
                 }
             }
             prev = curr;
@@ -77,7 +81,61 @@ void multiplexing_IO_mode(int connfd, struct sockaddr *clientsockaddr)
         }
         
     }
+} 
+#endif
+
+#ifdef loop_way
+void multiplexing_IO_mode(int connfd, struct sockaddr *clientsockaddr)
+{
+    fd_set read_fds, origin;
+    FD_ZERO(&read_fds);
+    FD_ZERO(&origin);
+    printf("Server started in multiplexing I/O mode\n");
+    FD_SET(connfd, &origin);
+    int maxnum = connfd + 1;
+    while(1)
+    {
+        read_fds = origin;
+        if (select(maxnum, &read_fds, NULL, NULL, NULL) == -1)
+        {
+            perror("select");
+            return;
+        }
+        int i;
+        for(i = 0; i < maxnum; i++)
+        {
+            if (FD_ISSET(i, &read_fds))
+            {
+                if(i == connfd)
+                {
+                    //connect
+                    int len = sizeof(*clientsockaddr);
+                    int clientfd = accept(connfd, clientsockaddr, &len);
+                    if(clientfd < 0)
+                    {
+                        perror("multiplexingIO clientfd < 0");
+                    }
+                    else
+                    {
+                        FD_SET(clientfd, &origin);
+                        if(clientfd >= maxnum)
+                            maxnum = clientfd + 1;
+                    }
+                }
+                else
+                {
+                    handle_it(i, MSG_DONTWAIT);
+                    close(i);
+                    FD_CLR(i, &origin);
+                }
+            }
+        }
+        
+    }
 }
+#endif
+
+
 
 void sock_linklist_insert(SockNode *node)
 {
@@ -94,20 +152,23 @@ void sock_linklist_init()
 {
     linklist.nfds = 1;
     linklist.first = NULL;
+    FD_ZERO(&linklist.fdset);
 }
 
-void sock_linklist_rm(SockNode *prev, SockNode *curr)
+void sock_linklist_rm(SockNode *prev, SockNode **curr)
 {
-    FD_CLR(curr->socknum, &linklist.fdset);
+    FD_CLR((*curr)->socknum, &linklist.fdset);
     if (prev == NULL)
     {
-        linklist.first = curr->next;
-        free(curr);
+        linklist.first = (*curr)->next;
+        free(*curr);
+        *curr = linklist.first;
     }
     else
     {
-        prev->next = curr->next;
-        free(curr);
+        prev->next = (*curr)->next;
+        free(*curr);
+        *curr = prev->next;
     }
 }
 
@@ -120,6 +181,6 @@ void sock_linklist_destroy()
         free(temp);
         temp = linklist.first;
     }
-    printf("sock linklist destroied\n");
+    printf("\n");
     exit(0);
 }
