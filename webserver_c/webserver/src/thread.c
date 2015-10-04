@@ -32,22 +32,38 @@ void *thread_pool_run(void *argv)
         pthread_mutex_lock(&waitlock);
         pthread_cond_wait(&(worker->threadcond), &waitlock);
         pthread_mutex_unlock(&waitlock);
-//        printf("%u is in serving\n", me);
+        //printf("%u is in serving\n", me);
         handle_it(worker->clientfd, 0);
         close(worker->clientfd);
+        //sleep(5);
         thread_pool_push(worker);
     }
 }
 
-void thread_pool_getspace(int num)
+int thread_pool_getspace(int num)
 {
     int i;
-    //ThreadWorker *temp = malloc(num * sizeof(ThreadWorker));
-    ThreadWorker *temp;
-    pthread_mutex_lock(&inpoollock);
+    ThreadWorker *temp = malloc(num * sizeof(ThreadWorker));
+    //ThreadWorker *temp;
     pthread_t tid;
-    for(i = 0; i < num; i ++)
+    if (pool.blocklen >= MAXMEMBLOCK)
+        return -1;
+    pthread_mutex_lock(&inpoollock);
+    pool.memblock[pool.blocklen] = temp;
+    pool.blocklen ++;
+    temp[num - 1].next = NULL;
+    pool.last->next = temp;
+    pool.last = &temp[num - 1];
+    pthread_cond_init(&(temp[num - 1].threadcond), NULL);
+    pthread_create(&tid, NULL, &thread_pool_run, &temp[num - 1]);
+    for(i = 0; i < num - 1; i ++)
     {
+
+        pthread_cond_init(&(temp[i].threadcond), NULL);
+        temp[i].next = &temp[i + 1];
+        pthread_create(&tid, NULL, &thread_pool_run, &temp[i]);
+        temp[i].threadid = tid;
+        /*
         temp = (ThreadWorker *)malloc(sizeof(ThreadWorker));
         pthread_cond_init(&(temp->threadcond), NULL);
         temp->next = NULL;
@@ -55,7 +71,7 @@ void thread_pool_getspace(int num)
         pool.last = temp;
         pthread_create(&tid, NULL, &thread_pool_run, temp);
         temp->threadid = tid;
-        
+       */ 
     }
     pthread_mutex_unlock(&inpoollock);
 }
@@ -73,6 +89,8 @@ void thread_pool_init()
     pthread_t tid;
     pthread_create(&tid, NULL, &thread_pool_run, temp);
     temp->threadid = tid;
+    pool.memblock[0] = temp;
+    pool.blocklen = 1;
 }
 
 void thread_pool_push(ThreadWorker *worker)
@@ -80,6 +98,7 @@ void thread_pool_push(ThreadWorker *worker)
     pthread_mutex_lock(&inpoollock);
     pool.last->next = worker;
     worker->next = NULL;
+    pool.last = worker;
     pthread_mutex_unlock(&inpoollock);
 }
 
@@ -124,7 +143,6 @@ void thread_pool_mode(int sockfd, struct sockaddr *clientsockaddr)
     signal(SIGTERM, thread_pool_destory);
     thread_pool_init();
     thread_pool_getspace(10);
-
     while(1)
     {
         connfd = accept(sockfd, clientsockaddr, &clientaddrlen);
@@ -137,7 +155,9 @@ void thread_pool_mode(int sockfd, struct sockaddr *clientsockaddr)
         ThreadWorker *temp = thread_pool_pop(&pool);
         if(temp == NULL)
         {    
-            thread_pool_getspace(1);
+            // some ploblem here, fix it
+            thread_pool_getspace(10);
+            printf("new space has been assignned\n");
             temp = thread_pool_pop(&pool);
         }
         pthread_mutex_unlock(&outpoollock);
@@ -174,6 +194,7 @@ void thread_pool_destory()
     pthread_mutex_destroy(&outpoollock);
     pthread_mutex_destroy(&inpoollock);
     pthread_mutex_destroy(&waitlock);
+    /*
     ThreadWorker *temp = pool.first;
     while(temp != NULL)
     {
@@ -182,6 +203,13 @@ void thread_pool_destory()
         free(temp);
         temp = pool.first;
     }
-    printf("\n");
+    */
+    int i;
+    for(i = 0; i < pool.blocklen; i++)
+    {
+        free(pool.memblock[i]);
+    }
+    printf("%d\n", i);
     exit(0);
 }
+

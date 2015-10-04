@@ -7,7 +7,7 @@
 
 #ifndef _THREAD_H
 #define _THREAD_H
-
+#define MAXMEMBLOCK 1000
 typedef struct ThreadWorker
 {
     pthread_cond_t threadcond;
@@ -17,6 +17,8 @@ typedef struct ThreadWorker
 }ThreadWorker;
 typedef struct ThreadPool
 {
+    ThreadWorker *memblock[MAXMEMBLOCK];
+    int blocklen;
     ThreadWorker *first;
     ThreadWorker *last;
 }ThreadPool;
