@@ -194,7 +194,7 @@ int get_method(char *buf, char *method, char *url, char *version)
 // receive data
 // return code : -1 connection broken; -2 Request too large; -3 server accepted a connection but didn't receive any data from client.  
 // clientfd: connect socket, buf: data received, maxlen: maxlen expected, if this value is -1, means no limited
-int recv_data(int clientfd, char *buf, int maxlen)
+int recv_data(int clientfd, char *buf, int maxlen, int recv_str)
 {
     int rec_len;
     long total_data = 0;
@@ -202,8 +202,8 @@ int recv_data(int clientfd, char *buf, int maxlen)
     *buf = 0;
     pthread_t me = pthread_self();
     //int ret = read(clientfd, buf, maxlen);
-    //for(rec_len = recv(clientfd, buf + total_data, 1024, 0); rec_len > 0; rec_len = recv(clientfd, buf + total_data, 1024, MSG_DONTWAIT))
-rec_len = recv(clientfd, buf + total_data, 1024, 0);
+    for(rec_len = recv(clientfd, buf + total_data, 1024, recv_str); rec_len > 0; rec_len = recv(clientfd, buf + total_data, 1024, MSG_DONTWAIT))
+//rec_len = recv(clientfd, buf + total_data, 1024, 0);
     {
         //recvdata[rec_len] = 0;
         //strcat(buf,recvdata);

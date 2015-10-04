@@ -18,7 +18,7 @@ void *handle_it_thread(void *argv)
 {
     pthread_t me = pthread_self();
     pthread_detach(me);
-    handle_it(*(int *)argv);
+    handle_it(*(int *)argv, 0);
     close(*(int *)argv);
     free(argv);
 }
@@ -33,7 +33,7 @@ void *thread_pool_run(void *argv)
         pthread_cond_wait(&(worker->threadcond), &waitlock);
         pthread_mutex_unlock(&waitlock);
 //        printf("%u is in serving\n", me);
-        handle_it(worker->clientfd);
+        handle_it(worker->clientfd, 0);
         close(worker->clientfd);
         thread_pool_push(worker);
     }

@@ -28,7 +28,7 @@
 char webpath[200] = "./";
 
 
-void handle_it(int clientfd)
+void handle_it(int clientfd, int recv_str)
 {
     char method[10], url[4000], version[20];
     char content[2000], filelastmodify[50], buf[10000] = "", argu[200], parsedurl[1000], loglevel[10];
@@ -40,7 +40,7 @@ void handle_it(int clientfd)
     struct tm *ti;
 
     signal(SIGPIPE, SIG_IGN);
-    recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH);
+    recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH, recv_str);
 
     if(recv_flag < 0)
     {
@@ -216,7 +216,7 @@ void single_mode(int sockfd, struct sockaddr *clientsockaddr)
             perror("server: accept\n");
             continue;
         }
-        handle_it(connfd);
+        handle_it(connfd, 0);
         close(connfd);
     }
     close(sockfd);
@@ -225,7 +225,7 @@ void single_mode(int sockfd, struct sockaddr *clientsockaddr)
 int main(int argc, char *argv[])
 {
     int sockfd, connfd, backlog = 30, daemonflag = 0;
-    int modeflag = 3;
+    int modeflag = 0;
     struct sockaddr clientsockaddr;
     char loginusername[20];
     struct passwd *ps;
@@ -282,14 +282,16 @@ int main(int argc, char *argv[])
             printf("Did not find the arguement: HANDLE_METHOD\n");
         else
         {
-            if(strcmp(res, "PROCESSES") == 0)
+            if(!strcmp(res, "PROCESSES"))
                 modeflag = 1;
-            else if(strcmp(res, "THREADS") == 0)
+            else if(!strcmp(res, "THREADS"))
                 modeflag = 2;
-            else if(strcmp(res, "SINGLE") == 0)
+            else if(!strcmp(res, "SINGLE"))
                 modeflag = 0;
-            else if(strcmp(res, "THREAD_POOL") == 0)
+            else if(!strcmp(res, "THREAD_POOL"))
                 modeflag = 3;
+            else if(!strcmp(res, "MULTIPLEXINGIO"))
+                modeflag = 4;
             else
                 printf("The value of \"HANDLE_METHOD\" is not valid\n");
         }
@@ -341,14 +343,16 @@ int main(int argc, char *argv[])
                         return 0;
                     }
                     int j;
-                    if (strcmp(argv[i + 1], "single") == 0)
+                    if (!strcmp(argv[i + 1], "single"))
                         modeflag = 0;
-                    else if (strcmp(argv[i + 1], "processes") == 0)
+                    else if (!strcmp(argv[i + 1], "processes"))
                         modeflag = 1;
-                    else if (strcmp(argv[i + 1], "threads") == 0)
+                    else if (!strcmp(argv[i + 1], "threads"))
                         modeflag = 2;
-                    else if (strcmp(argv[i + 1], "threadpool") == 0)
+                    else if (!strcmp(argv[i + 1], "threadpool"))
                         modeflag = 3;
+                    else if (!strcmp(argv[i + 1], "multiplexingIO"))
+                        modeflag = 4;
                     else
                     {
                         printf("unknown handle method, use -h to get some help.\n");
@@ -433,6 +437,9 @@ int main(int argc, char *argv[])
             break;
         case 3:
             thread_pool_mode(sockfd, &clientsockaddr);
+            break;
+        case 4:
+            multiplexing_IO_mode(sockfd, &clientsockaddr);
             break;
     }
     return 0;

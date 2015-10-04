@@ -15,6 +15,9 @@ typedef struct SockNode
 
 typedef struct SockLinklist
 {
+    fd_set fdset;
+    int nfds;
     SockNode *first;
-}SockNode;
+}SockLinklist;
+SockLinklist linklist;
 #endif

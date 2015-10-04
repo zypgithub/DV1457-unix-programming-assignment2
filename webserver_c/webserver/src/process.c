@@ -35,7 +35,7 @@ void handle_it_process(int clientfd, int listenfd)
     {
         // child process.
         close(listenfd);
-        handle_it(clientfd);
+        handle_it(clientfd, 0);
         close(clientfd);
         exit(0);
     }
@@ -94,9 +94,9 @@ int daemon_printpid(char *path)
         pid_t pid = getpid();
         printf("The daemon process ID: %d\n", pid);
 //      sixth step: close standard file descriptors
-//      close(STDIN_FILENO);
-//      close(STDOUT_FILENO);
-//      close(STDERR_FILENO);
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
         //freopen("./output", "awb+", stdout);
         //freopen("./erroutput", "awb+", stderr);
         // final step: handle siginals
