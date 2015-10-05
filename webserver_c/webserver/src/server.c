@@ -42,6 +42,7 @@ void handle_it(int clientfd, int recv_str)
     signal(SIGPIPE, SIG_IGN);
     recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH, recv_str);
 
+    printf("rectbuf: %s\n", buf);
     if(recv_flag < 0)
     {
         errlog_get_current_time(temp);
@@ -100,7 +101,7 @@ void handle_it(int clientfd, int recv_str)
                         t = get_file_last_modify(parsedurl);
                         ti = localtime(&t);
                         strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-                        sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
+                        sprintf(content, "Content-Type: %s\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", contenttype, get_file_size(parsedurl), filelastmodify);
                         send_header(clientfd, 200, content);
                         if (strcmp(method, "GET") == 0)
                         {    
