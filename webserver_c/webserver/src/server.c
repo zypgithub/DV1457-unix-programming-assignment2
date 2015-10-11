@@ -136,7 +136,7 @@ void handle_it(int clientfd, int recv_str)
             t = get_file_last_modify("./html/400.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/400.html"), filelastmodify);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/400.html"), filelastmodify);
             send_header(clientfd, 400, content);
             datasent = open_send_file(clientfd, "./html/400.html");
             strcpy(loglevel, "notice");
@@ -147,7 +147,7 @@ void handle_it(int clientfd, int recv_str)
             t = get_file_last_modify("./html/403.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/403.html"), filelastmodify);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/403.html"), filelastmodify);
             send_header(clientfd, 403,content);
             datasent = open_send_file(clientfd, "./html/403.html");
             strcpy(loglevel, "notice");
@@ -158,7 +158,7 @@ void handle_it(int clientfd, int recv_str)
             t = get_file_last_modify("./html/404.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/404.html"), filelastmodify);
+            sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/404.html"), filelastmodify);
             send_header(clientfd, 404, content);
             datasent = open_send_file(clientfd, "./html/404.html");
             strcpy(loglevel, "notice");
@@ -169,7 +169,7 @@ void handle_it(int clientfd, int recv_str)
             t = get_file_last_modify("./html/500.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/500.html"), filelastmodify);
+            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/500.html"), filelastmodify);
             send_header(clientfd, 500, content);
             //open_send_file(clientfd, "./html/500.html");
             strcpy(loglevel, "error");
@@ -180,7 +180,7 @@ void handle_it(int clientfd, int recv_str)
             t = get_file_last_modify("./html/501.html");
             ti = localtime(&t);
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
-            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: Alex\r\n", get_file_size("./html/501.html"), filelastmodify);
+            sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/501.html"), filelastmodify);
             sprintf(errmsg, "Method %s is nor implemented: %s", method, url);
             send_header(clientfd, 501, content);
             //open_send_file(clientfd, "./html/501.html");
