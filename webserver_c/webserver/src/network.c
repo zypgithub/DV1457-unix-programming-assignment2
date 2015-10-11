@@ -184,7 +184,7 @@ int get_method(char *buf, char *method, char *url, char *version)
         version[j] = buf[i];
     }
     if(j > 19)
-        return 400;
+        return 500;
     else
         version[j] = 0;
     return 0;

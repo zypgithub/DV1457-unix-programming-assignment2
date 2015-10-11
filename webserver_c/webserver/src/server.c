@@ -74,13 +74,13 @@ void handle_it(int clientfd, int recv_str)
     stdlog_get_current_time(temp);//temp is ip addr 
     strcat(logcontent, temp);
     statuscode = get_method(buf, method, url, version);
+    sprintf(temp, " \"%s %s %s\"", method, url, version);
+    strcat(logcontent, temp);
+    sprintf(temp, "%s%s", webpath, url);
+    realpath(temp, abrequestpath);
     if(statuscode == 0)
     {
-        sprintf(temp, " \"%s %s %s\"", method, url, version);
-        strcat(logcontent, temp);
-        statuscode = parse_url(url, parsedurl, argu);
-        sprintf(temp, "%s%s", webpath, url);
-        realpath(temp, abrequestpath);
+         statuscode = parse_url(url, parsedurl, argu);
         //printf("method: %s, url: %s, version: %s\n", method, url, version);
         if (statuscode == 0 )
         {
