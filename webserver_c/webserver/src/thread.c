@@ -12,7 +12,7 @@
 #include<signal.h>
 #include<errno.h>
 
-#include"../include/thread.h"
+#include"thread.h"
 
 #define INITTHREADNUM 20
 #define INCRTHREADNUM 20
@@ -134,9 +134,7 @@ void thread_pool_wakeup(ThreadWorker *worker, int clientfd)
 
 void thread_pool_mode(int sockfd, struct sockaddr *clientsockaddr)
 {
-    int *conn;
     int connfd;
-    pthread_t tid;
     int clientaddrlen = sizeof(*clientsockaddr);
     printf("Server started in thread pool mode.\n");
     signal(SIGHUP, thread_pool_destory);

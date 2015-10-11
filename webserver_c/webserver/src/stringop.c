@@ -10,6 +10,7 @@
 #include<string.h>
 #include<unistd.h>
 #include<errno.h>
+#include"string.h"
 
 
 int get_file_type(char *path, char *type)

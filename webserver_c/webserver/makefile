@@ -3,6 +3,7 @@ LD = gcc
 INC_DIR = include
 SRC_DIR = src
 OBJ_DIR = objects
+INC_DIR = include
 CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS = 
 SRCS = $(SRC_DIR)/server.c $(SRC_DIR)/network.c $(SRC_DIR)/process.c $(SRC_DIR)/tools.c $(SRC_DIR)/stringop.c $(SRC_DIR)/fileop.c $(SRC_DIR)/thread.c $(SRC_DIR)/multiplexingIO.c
@@ -26,7 +27,7 @@ $(PROG): $(OBJS)
 #greeter.o: greeter.c
 #	gcc -g -c greeter.c
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/%.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #clean:

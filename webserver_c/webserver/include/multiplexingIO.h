@@ -20,4 +20,11 @@ typedef struct SockLinklist
     SockNode *first;
 }SockLinklist;
 SockLinklist linklist;
+/////////////////////////////////////////////////////
+void sock_linklist_init();
+void sock_linklist_insert(SockNode *);	
+void sock_linklist_destroy();
+void sock_linklist_rm(SockNode *, SockNode **);
+void multiplexing_IO_mode(int, struct sockaddr *);
+
 #endif

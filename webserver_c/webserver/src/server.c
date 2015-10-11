@@ -19,14 +19,17 @@
 #include<syslog.h>
 #include<pthread.h>
 
+#include"multiplexingIO.h"
 #include"network.h"
+#include"thread.h"
 #include"process.h"
-#include"../include/thread.h"
+#include"string.h"
+#include"fileop.h"
 
 #define MAXHEADLENGTH 2000
 
-char webpath[200] = "./";
 
+char webpath[200] = "./";
 
 void handle_it(int clientfd, int recv_str)
 {
@@ -42,7 +45,6 @@ void handle_it(int clientfd, int recv_str)
     signal(SIGPIPE, SIG_IGN);
     recv_flag = recv_data(clientfd, buf, MAXHEADLENGTH, recv_str);
 
-    printf("rectbuf: %s\n", buf);
     if(recv_flag < 0)
     {
         errlog_get_current_time(temp);

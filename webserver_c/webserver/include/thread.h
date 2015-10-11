@@ -24,9 +24,27 @@ typedef struct ThreadPool
 }ThreadPool;
 
 void *handle_it_thread(void *);
-void thread_pool_push(ThreadWorker *);
-void thread_pool_destory();
+//////////////////////////////////////////
+void *thread_pool_run(void *);
 
+int thread_pool_getspace(int );
+
+void thread_pool_init();
+
+void thread_pool_push(ThreadWorker *);
+
+ThreadWorker *thread_pool_pop();
+
+ThreadWorker *thread_pool_gettop();
+
+void thread_pool_wakeup(ThreadWorker *, int );
+
+void thread_pool_mode(int, struct sockaddr *);
+
+void thread_mode(int, struct sockaddr *);
+
+void thread_pool_destory();
+/////////////////////////////////////////
 pthread_mutex_t inpoollock, outpoollock;
 pthread_mutex_t waitlock;
 ThreadPool pool;

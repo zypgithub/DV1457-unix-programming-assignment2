@@ -12,6 +12,7 @@
 #include<unistd.h>
 #include<sys/socket.h>
 #include<sys/stat.h>
+#include"process.h"
 
 
 int prevent_zombie()

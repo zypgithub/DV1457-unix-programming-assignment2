@@ -15,6 +15,8 @@
 #include<pthread.h>
 #include<pwd.h>
 #include<time.h>
+#include"fileop.h"
+#include"network.h"
 
 FILE *logfile = NULL, *errlogfile = NULL;
 pthread_mutex_t errlogmutexlock, stdlogmutexlock, sysloglock;
