@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
         int i;
         for(i = 1; i < argc; i++)
         {
-            if (argv[i][0] != '-')
+            if (argv[i][0] != '-' || argv[i][2] != 0)
             {
                 printf("Option error, Please use -h to get some help.\n");
                 return 1;
@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
                     printf("-p portnumber, Set server port.\n");
                     printf("-d, Run as a daemon process.\n");
                     printf("-l <logfilename>, Record log file to <logfilename>.log and <logfilename>.err. The path of log files is WEBSERVERROOT/log.\n");
-                    printf("-s single|processes|threads|threadpool, Set handling method.\n");
+                    printf("-s single|processes|threads|threadpool|multiplexingIO, Set handling method.\n");
                     return 0;
                 case 'p':
                     strcpy(port, argv[i + 1]);
