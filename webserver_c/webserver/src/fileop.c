@@ -120,6 +120,7 @@ int open_err_log_file(char *name)
         pthread_mutex_init(&errlogmutexlock, NULL);
         sprintf(logfilepath, "./log/%s.err", name);
         errlogfile = fopen(logfilepath, "aw+");
+        setlinebuf(errlogfile);
         if (errlogfile == NULL)
         {
             printf("Cannot open error logfile\n");
@@ -148,6 +149,7 @@ int open_std_log_file(char *name)
         pthread_mutex_init(&stdlogmutexlock, NULL);
         sprintf(logfilepath, "./log/%s.log", name);
         logfile = fopen(logfilepath, "aw+");
+        setlinebuf(logfile);
         if (logfile == NULL)
         {
             printf("Cannot open standard logfile\n");
