@@ -39,19 +39,21 @@ int split_filename_path(char *url, char *filename, char *path)
     int i = len - 1;
     if (url[i] == '/')
         return 1;
-    for (; i > 0; i--)
+    for (; i >= 0; i--)
     {
         if (url[i] == '/') 
         {
             sprintf(filename, "%s", &url[i + 1]);
             int j;
-            for (j = 0; j < i; j++)
+            for (j = 0; j <= i; j++)
             {
                 path[j] = url[j];
             }
             path[j] = 0;
+            return 0;
         }
     }
+    return -1;
 }
 
 int parse_url(char *url, char *realurl, char *argu)
@@ -60,6 +62,7 @@ int parse_url(char *url, char *realurl, char *argu)
     char tempurl[200];
     char filetype[21] = "";
     int filetypeflag;
+    char filename[200], path[200];
     char workpath[200];
     sprintf(tempurl, ".%s", url);
     if ((temp = strstr(tempurl, "?")) != NULL)
@@ -92,12 +95,18 @@ int parse_url(char *url, char *realurl, char *argu)
             realurl[len - 1] = 0;
         }
         strcat(realurl, ".html");
+        strcpy(filetype, "html");
     }
     else if (filetypeflag < 0)
     {
         return filetypeflag;
     }
-    
+    if (!strcmp(filetype, "html"))
+    {
+        if (split_filename_path(realurl, filename, path) == -1)
+            return 400;
+        sprintf(realurl, "%shtml/%s", path, filename);
+    }
     return 0;
 }
 

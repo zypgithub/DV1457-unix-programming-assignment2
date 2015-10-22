@@ -77,7 +77,7 @@ void handle_it(int clientfd, int recv_str)
     sprintf(temp, " \"%s %s %s\"", method, url, version);
     strcat(logcontent, temp);
     sprintf(temp, "%s%s", webpath, url);
-    realpath(temp, abrequestpath);
+    strcpy(abrequestpath, temp);
     if(statuscode == 0)
     {
          statuscode = parse_url(url, parsedurl, argu);
@@ -392,21 +392,6 @@ int main(int argc, char *argv[])
         printf("server error: open error log file failed\n");
         return -1;
     }
-    // use chroot to specify the root dictionary and then drop the root privilege
-    getlogin_r(loginusername, 20);
-    if((ps = getpwnam(loginusername)) == NULL)
-    {
-        printf("%s\n", strerror(errno));
-        return -1;
-    }
-    if(chroot(webrealpath) == -1)
-        printf("Cannot reset the root dir, because %s\n", strerror(errno));
-    else
-    {
-        setuid(ps->pw_uid);
-        setgid(ps->pw_gid);
-    }
-
     //prevent zombie process
     prevent_zombie();
 
@@ -417,6 +402,22 @@ int main(int argc, char *argv[])
         printf("Server fail to start when start listening\n");
         return -1;
     }
+    // use chroot to specify the root dictionary and then drop the root privilege
+    getlogin_r(loginusername, 20);
+    if((ps = getpwnam(loginusername)) == NULL)
+    {
+        printf("%s\n", strerror(errno));
+        return -1;
+    }
+    strcpy(webpath, webrealpath);
+    if(chroot(webrealpath) == -1)
+        printf("Cannot reset the root dir, because %s\n", strerror(errno));
+    else
+    {
+        setuid(ps->pw_uid);
+        setgid(ps->pw_gid);
+    }
+
 
 
     //printf("Server start!\n");

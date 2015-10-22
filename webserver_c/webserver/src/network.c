@@ -48,7 +48,7 @@ int start_listen(char* port, int backlog)
     gethostname(hostname, 99);
 
     //if((rv = getaddrinfo(hostname, port, &hints, &servinfo)) != 0)
-    if((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0)
+    if((rv = getaddrinfo("localhost", port, &hints, &servinfo)) != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv)); // gai_streeror() gets errors information by using return code from getaddrinfo()
         return -1;
