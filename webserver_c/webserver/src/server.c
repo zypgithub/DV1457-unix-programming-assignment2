@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
     //getlogin_r(loginusername, 20);
     if((ps = getpwuid(getuid())) == NULL)
     {
-        printf("%s\n", strerror(errno));
+        printf("getpwuid: %s\n", strerror(errno));
         return -1;
     }
     strcpy(webpath, webrealpath);
