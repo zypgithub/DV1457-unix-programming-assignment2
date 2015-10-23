@@ -81,8 +81,8 @@ int daemon_printpid(char *path)
         //child process;
         //Second step: Set the File opearting privilege
         //if umask set to 0, it means every body can read and write on output files. 
-        //so I set it as 022, it means only owner can read and write, others only can read
-        umask(022);
+        //If set it as 022, it means only owner can read and write, others only can read
+        umask(0);
 
         //Third step: Opening Logs 
 
