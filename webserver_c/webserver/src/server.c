@@ -138,7 +138,10 @@ void handle_it(int clientfd, int recv_str)
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/400.html"), filelastmodify);
             send_header(clientfd, 400, content);
-            datasent = open_send_file(clientfd, "./html/400.html");
+            if (strcmp(method, "GET") == 0)
+            {    
+                datasent = open_send_file(clientfd, "./html/400.html");
+            }
             strcpy(loglevel, "notice");
             if(errmsg[0] == 0)
                 sprintf(errmsg, "Bad Request: %s", abrequestpath);
@@ -149,7 +152,10 @@ void handle_it(int clientfd, int recv_str)
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/403.html"), filelastmodify);
             send_header(clientfd, 403,content);
-            datasent = open_send_file(clientfd, "./html/403.html");
+            if ( strcmp(method, "GET") == 0)
+            {
+                datasent = open_send_file(clientfd, "./html/403.html");
+            }
             strcpy(loglevel, "notice");
             if(errmsg[0] == 0)
                 sprintf(errmsg, "Forbidden: %s", abrequestpath);
@@ -160,7 +166,10 @@ void handle_it(int clientfd, int recv_str)
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/html\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/404.html"), filelastmodify);
             send_header(clientfd, 404, content);
-            datasent = open_send_file(clientfd, "./html/404.html");
+            if ( strcmp(method, "GET") == 0 )
+            {
+                datasent = open_send_file(clientfd, "./html/404.html");
+            }
             strcpy(loglevel, "notice");
             if(errmsg[0] == 0)
                 sprintf(errmsg, "Not Found: %s", abrequestpath);
@@ -171,6 +180,7 @@ void handle_it(int clientfd, int recv_str)
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/500.html"), filelastmodify);
             send_header(clientfd, 500, content);
+
             //open_send_file(clientfd, "./html/500.html");
             strcpy(loglevel, "error");
             if(errmsg[0] == 0)
