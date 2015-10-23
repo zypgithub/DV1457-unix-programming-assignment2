@@ -402,9 +402,11 @@ int main(int argc, char *argv[])
         printf("Server fail to start when start listening\n");
         return -1;
     }
-    // use chroot to specify the root dictionary and then drop the root privilege
-    getlogin_r(loginusername, 20);
-    if((ps = getpwnam(loginusername)) == NULL)
+   
+
+ // use chroot to specify the root dictionary and then drop the root privilege
+    //getlogin_r(loginusername, 20);
+    if((ps = getpwuid(getuid())) == NULL)
     {
         printf("%s\n", strerror(errno));
         return -1;
@@ -417,7 +419,6 @@ int main(int argc, char *argv[])
         setuid(ps->pw_uid);
         setgid(ps->pw_gid);
     }
-
 
 
     //printf("Server start!\n");
