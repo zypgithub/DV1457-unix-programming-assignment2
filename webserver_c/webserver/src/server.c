@@ -180,7 +180,6 @@ void handle_it(int clientfd, int recv_str)
             strftime(filelastmodify, 50, "%a, %e %b %Y %H:%M:%S GMT", ti);
             sprintf(content, "Content-Type: text/plain\r\nContent-Length: %d\r\nLast-Modified: %s\r\nServer: DV1457 webserver\r\n", get_file_size("./html/500.html"), filelastmodify);
             send_header(clientfd, 500, content);
-
             //open_send_file(clientfd, "./html/500.html");
             strcpy(loglevel, "error");
             if(errmsg[0] == 0)
