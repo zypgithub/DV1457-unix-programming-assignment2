@@ -1,2 +1,2 @@
-# DV1457-unix-programming-assignment2
+# web-server-in-c
 Author: Yanpeng Zhang from BTH
