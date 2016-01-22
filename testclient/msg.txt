@@ -1,1 +1,13 @@
-GET /abc HTTPasdfjaskdlfjaskldjfalk;sdf
+GET /mutillidae/index.php?page=show-log.php HTTP/1.1
+Host: localhost
+Connection: keep-alive
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0
+Referer: http://localhost/mutillidae/index.php?page=login.php&popUpNotificationCode=LOU1
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4
+Cookie: showhints=0; username=admin; uid=1; PHPSESSID=h3jfagrc0296pp6hfjr0ajnc03
+

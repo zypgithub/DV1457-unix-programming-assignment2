@@ -22,22 +22,24 @@ int main()
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    getaddrinfo("0.0.0.0", "8000", &hints, &servifo);
+    getaddrinfo("127.0.0.1", "80", &hints, &servifo);
     sockfd = socket(servifo->ai_family, servifo->ai_socktype, servifo->ai_protocol);
     char msg[100000];
     FILE * f = fopen("msg.txt", "r");
+    int s = connect(sockfd, servifo->ai_addr, servifo->ai_addrlen);
     //fread(msg, sizeof(char), 100, f);
     while(fgets(msg, 100, f) != NULL)
     {
         int len = strlen(msg);
-        int s = connect(sockfd, servifo->ai_addr, servifo->ai_addrlen);
-        printf("%d\n", len);
-        send(sockfd, msg, len, 0);
-
+        int a =  send(sockfd, msg, len, 0);
+        printf("%d/n", a);
+        
+    }
+    send(sockfd, "/n/t/n/t", 4, 0);
         char recvdata[2000];
         int rec_len = 0;
         int total_data = 0;
-        for(rec_len = recv(sockfd, recvdata, 512, 0); rec_len > 0; rec_len = recv(sockfd, recvdata, 512, MSG_DONTWAIT))
+    for(rec_len = recv(sockfd, recvdata, 512, 0); rec_len > 0; rec_len = recv(sockfd, recvdata, 512, MSG_DONTWAIT))
         {
             recvdata[rec_len] = 0;
             strcat(buf,recvdata);
@@ -46,7 +48,6 @@ int main()
         } 
         printf("%s", buf);
         close(sockfd);
-    }
     freeaddrinfo(servifo);
     fclose(f);
     
